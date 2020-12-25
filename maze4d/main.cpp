@@ -42,7 +42,7 @@
 
 -----------------------------------------------------------------------------*/
 
-#include <glad\glad.h> // generated from https://glad.dav1d.de
+#include <glad/glad.h> // generated from https://glad.dav1d.de
 #include "shader.h"
 
 #include <Utils.h>
@@ -406,7 +406,9 @@ int main()
 	return 0;
 }
 
+#ifdef _WIN32
 int CALLBACK WinMain(Windows::HINSTANCE hInstance, Windows::HINSTANCE hPrevInstance, Windows::LPSTR pCmdLine, int nCmdShow)
 {
 	return main();
 }
+#endif

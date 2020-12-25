@@ -2,6 +2,7 @@
 First person four-dimensional maze game, visualized by 3D cross-sections. The game uses software rendering (CPU-based raycasting), so it has poor performance and can be very slow at high resolutions.
 
 ## Build
+### Windows
 Just clone the repository, and build `maze4d.sln` in Visual Studio 2015.
 
 Project includes following dependencies:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 
@@ -23,6 +23,7 @@
 
 #include <glm/ext.hpp>
 
+#ifdef _WIN32
 namespace Windows
 {
 #undef APIENTRY
@@ -30,6 +31,7 @@ namespace Windows
 #undef min
 #undef max
 }
+#endif
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -119,7 +121,11 @@ static void LogN(T &&first, Ts&&... rest) {
 static void CriticalError(const char* s)
 {
 	Log(s);
+#ifdef _WIN32
 	Windows::MessageBoxA(NULL, s, "Error", MB_OK | MB_ICONERROR);
+#else
+	fprintf(stderr, "Error: %s", s);
+#endif
 	glfwTerminate();
 	exit(-1);
 }
@@ -128,7 +134,7 @@ class Random
 {
 public:
 	Random() {}
-	void Random::Init(int seed = -1);
+	void Init(int seed = -1);
 	static Random* GetInstance();
 
 	int GetInt(int a, int b);
