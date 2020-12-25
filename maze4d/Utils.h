@@ -23,7 +23,7 @@
 
 #include <glm/ext.hpp>
 
-#ifdef WINDOWS
+#ifdef _WIN32
 namespace Windows
 {
 #undef APIENTRY
@@ -121,7 +121,7 @@ static void LogN(T &&first, Ts&&... rest) {
 static void CriticalError(const char* s)
 {
 	Log(s);
-#ifdef WINDOWS
+#ifdef _WIN32
 	Windows::MessageBoxA(NULL, s, "Error", MB_OK | MB_ICONERROR);
 #else
 	fprintf(stderr, "Error: %s", s);

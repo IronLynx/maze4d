@@ -406,7 +406,7 @@ int main()
 	return 0;
 }
 
-#ifdef WINDOWS
+#ifdef _WIN32
 int CALLBACK WinMain(Windows::HINSTANCE hInstance, Windows::HINSTANCE hPrevInstance, Windows::LPSTR pCmdLine, int nCmdShow)
 {
 	return main();
