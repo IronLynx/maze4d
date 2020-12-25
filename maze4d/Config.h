@@ -19,9 +19,9 @@ public:
 			WriteFile();
 			Log("Config not found, use default");
 		}
-		for each (std::pair<std::string, paramValues> param in PARAMS)
+		for (std::map<std::string, paramValues>::iterator param = PARAMS.begin(); param != PARAMS.end(); ++param)
 		{
-			Log(param.first, ": ", settings.find(param.first)->second);
+			Log(param->first, ": ", settings.find(param->first)->second);
 		}
 
 		if (!CheckConfig())
@@ -44,9 +44,9 @@ private:
 	{
 		std::map<std::string, std::string>::iterator paramValueIter;
 
-		for each (std::pair<std::string, paramValues> param in PARAMS)
+		for (std::map<std::string, paramValues>::iterator param = PARAMS.begin(); param != PARAMS.end(); ++param)
 		{
-			paramValueIter = settings.find(param.first);
+			paramValueIter = settings.find(param->first);
 
 			if (paramValueIter == settings.end())
 			{
@@ -55,7 +55,7 @@ private:
 
 			try
 			{
-				if (param.second.isFloat)
+				if (param->second.isFloat)
 					float tmp = std::stof(paramValueIter->second);
 				else
 					int tmp = std::stoi(paramValueIter->second);
@@ -72,9 +72,9 @@ private:
 	{
 		settings.clear();
 
-		for each (std::pair<std::string, paramValues> param in PARAMS)
+		for (std::map<std::string, paramValues>::iterator param = PARAMS.begin(); param != PARAMS.end(); ++param)
 		{
-			settings.insert(std::pair<std::string, std::string>(param.first, param.second.defaultValue));
+			settings.insert(std::pair<std::string, std::string>(param->first, param->second.defaultValue));
 		}
 	}
 
@@ -88,9 +88,9 @@ private:
 			return;
 		}
 
-		for each (std::pair<std::string, paramValues> param in PARAMS)
+		for (std::map<std::string, paramValues>::iterator param = PARAMS.begin(); param != PARAMS.end(); ++param)
 		{
-			outputFile << param.first << " = " << param.second.defaultValue << param.second.comment << "\n";
+			outputFile << param->first << " = " << param->second.defaultValue << param->second.comment << "\n";
 		}
 	}
 
