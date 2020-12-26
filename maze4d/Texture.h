@@ -31,6 +31,6 @@ public:
 	static const int MIN_VALUE = 5;
 	static const int TEX_SIZE = 16;
 	static const int LIGHT_GRAD = 16;
-	// +1 для случая, когда int(texCoord * TEX_SIZE) == TEX_SIZE
+	// +1 for the case when int(texCoord * TEX_SIZE) == TEX_SIZE
 	glm::u8vec3 tex[TEX_SIZE + 1][TEX_SIZE + 1][TEX_SIZE + 1][LIGHT_GRAD];
 };

@@ -18,7 +18,7 @@ bool Maze::IsWallExist(int edge, glm::ivec4 pos)
 
 void Maze::Generate()
 {
-	// Заполняем лабиринт стенами
+	// Filling the maze with walls
 	for (int x = 0; x < size.x; x++)
 	{
 		for (int y = 0; y < size.y; y++)
@@ -46,7 +46,6 @@ void Maze::Generate()
 	while (unvisitedCells > 0)
 	{
 		std::vector<int> curNeighbours = FindUnvisitedNeighbours(curRoomX, curRoomY, curRoomZ, curRoomW);
-		//Если есть непосещённые соседи
 		if (curNeighbours.size() != 0)
 		{
 			int randNeighbour = rnd->GetInt(0, curNeighbours.size() - 1);

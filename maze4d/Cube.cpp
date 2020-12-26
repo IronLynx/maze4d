@@ -4,14 +4,14 @@ Cube::TextureSet_t Cube::textureSet;
 
 void Cube::Init()
 {
-	textureSet[NEG_X].Init(glm::ivec3(351, 86, 80)); // красный
-	textureSet[POS_X].Init(glm::ivec3( 32, 86, 80)); // оранжевый
-	textureSet[NEG_Y].Init(glm::ivec3( 62, 86, 80)); // желтый
-	textureSet[POS_Y].Init(glm::ivec3(128, 86, 80)); // зеленый
-	textureSet[NEG_Z].Init(glm::ivec3(180, 86, 80)); // голубой
-	textureSet[POS_Z].Init(glm::ivec3(245, 86, 80)); // синий
-	textureSet[NEG_W].Init(glm::ivec3(282, 86, 80)); // фиолетовый
-	textureSet[POS_W].Init(glm::ivec3(  0,  0, 60)); // серый
+	textureSet[NEG_X].Init(glm::ivec3(351, 86, 80)); // red
+	textureSet[POS_X].Init(glm::ivec3( 32, 86, 80)); // orange
+	textureSet[NEG_Y].Init(glm::ivec3( 62, 86, 80)); // yellow
+	textureSet[POS_Y].Init(glm::ivec3(128, 86, 80)); // green
+	textureSet[NEG_Z].Init(glm::ivec3(180, 86, 80)); // cyan
+	textureSet[POS_Z].Init(glm::ivec3(245, 86, 80)); // blue
+	textureSet[NEG_W].Init(glm::ivec3(282, 86, 80)); // purple
+	textureSet[POS_W].Init(glm::ivec3(  0,  0, 60)); // gray
 }
 
 void Cube::GetPixel(int edgeNum, glm::u8vec3& pixel, glm::vec3 texCoord,
@@ -19,7 +19,8 @@ void Cube::GetPixel(int edgeNum, glm::u8vec3& pixel, glm::vec3 texCoord,
 {
 	int lightLevel = ((light >> (edgeNum * 4)) & (Texture::LIGHT_GRAD - 1));
 
-	// Преобразование координат из абсолютных в относительные от позиции куба (диапазон 0..1)
+	// Converting coordinates from absolute to relative
+	// to the position of the cube (in range 0..1)
 	switch (edgeNum)
 	{
 	case NEG_X:

@@ -11,11 +11,13 @@ Project includes following dependencies:
 
 ## Controls
 ```
+ ------------ Movement ------------
  Forward (+x): W,   Back (-x): S
  Up      (+y): R,   Down (-y): F
  Right   (+z): D,   Left (-z): A
  Ana     (+w): T,   Kata (-w): G
 
+ ------------ Rotation ------------
  XY (pitch): I,    K  (or mouseY)
  XZ (yaw):   L,    J  (or mouseX)
  XW:         O,    U  (or mouseY + LSHIFT)
@@ -23,6 +25,7 @@ Project includes following dependencies:
  YW:         Z,    C
  ZW:         M,    N  (or mouseX + LSHIFT)
 
+ ------------ Other ------------
  Reset player:      P
  Noclip:            F8
  Fullscreen:        F11

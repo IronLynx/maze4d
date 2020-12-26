@@ -161,7 +161,7 @@ void Field::GenerateWalls(Maze* maze)
 						size.z / maze->size.z,
 						size.w / maze->size.w);
 
-					// Создание стен (только на отрицательных гранях)
+					// Create walls (only on negative edges)
 					if (maze->IsWallExist(NEG_X, glm::ivec4(x, y, z, w)))
 					{
 						createShape(glm::ivec4(x*step.x, y*step.y, z*step.z, w*step.w),
@@ -183,8 +183,8 @@ void Field::GenerateWalls(Maze* maze)
 							glm::ivec4((x + 1)*step.x, (y + 1)*step.y, (z + 1)*step.z, w*step.w + 1));
 					}
 
-					// Создание углов (проверяем положительные грани в этой комнате, но создаем углы в соседних на
-					// отрицательных гранях)
+					// Create corners (check positive edges in current room and create corners
+					// on negative edges in adjoining rooms)
 					if (maze->IsWallExist(POS_X, glm::ivec4(x, y, z, w)) && maze->IsWallExist(POS_Y, glm::ivec4(x, y, z, w)))
 					{
 						createShape(glm::ivec4((x + 1)*step.x, (y + 1)*step.y, z*step.z, w*step.w),
