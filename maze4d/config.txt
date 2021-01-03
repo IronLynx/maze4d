@@ -1,0 +1,15 @@
+height = 400
+light_dist = 27
+maze_room_size = 12
+maze_size_w = 3
+maze_size_x = 3
+maze_size_y = 3
+maze_size_z = 3
+mouse_sens = 0.1
+multithreading = 0 # 0 - disable; 1 - enable. WARNING: CPU usage can reach 100%
+seed = -1 # set -1 to use random seed
+skip_pixels = 0 # set 1 to render all pixels each frame; 0 to render only half
+speed = 9.0
+vsync = 0 # 0 - disable; 1 - enable
+width = 640
+window_scale = 2.0

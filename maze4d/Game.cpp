@@ -10,6 +10,7 @@ Game::Game()
 	viewHeight = glm::abs(cfg->GetInt("height"));
 	viewScale = glm::abs(cfg->GetFloat("window_scale"));
 	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
+	userInterface = new UserInterface(viewWidth, viewHeight);
 }
 
 void Game::Init()
@@ -44,7 +45,20 @@ void Game::Init()
 	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player);
 }
 
+void Game::NewGame()
+{
+	if (playerController != nullptr)
+		delete playerController;
+	if (field != nullptr)
+		delete field;
+	if (renderer != nullptr)
+		delete renderer;
+
+	Init();	
+}
+
 void Game::Render(uint8_t* buffer)
 {
-	renderer->FillTexData(buffer, viewWidth, viewHeight);
+	renderer->FillTexData(buffer, viewWidth, viewHeight);	
+	userInterface->RenderPlayerinfo(&player, buffer);
 }

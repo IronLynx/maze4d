@@ -3,6 +3,7 @@
 #include <Utils.h>
 #include <Field.h>
 #include <Raycaster.h>
+#include <fstream>
 
 class Player
 {
@@ -17,12 +18,22 @@ public:
 
 	void Reset()
 	{
-		vx = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-		vy = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-		vz = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-		vw = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		ResetAngle();
 		pos = glm::vec4(field->roomSize / 2.0f + 0.2f);
 		lastPos = pos;
+	}
+
+	void ResetAngle()
+	{
+		//player orientation
+		angleXY = 0.0f; //-90f - 90f acceptable values, this is up-down rotation angle
+		angleXZ = 0.0f; //free for all rotation left-right
+		angleYZ = 0.0f; //roll
+		angleXW = 0.0f; 
+		angleZW = 0.0f; 
+		angleYW = 0.0f; 
+
+		SetCurrentRotation();
 	}
 
 	void Rotate(float a, glm::vec4& va, glm::vec4& vb)
@@ -51,6 +62,55 @@ public:
 		}
 	}
 
+	void SetCurrentRotation()
+	{
+		vx = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+		vy = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+		vz = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+		vw = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		
+		//Set default-constant pitch angle
+		//Doesn't affect MouseY input
+		Rotate(90.0f, vx, vy); 
+		
+		//Prioritized W-rotation to define 3D-slice
+		Rotate(angleYW, vy, vw); //Roll 4th dimenison journey
+		Rotate(angleZW, vz, vw); //Shift + MouseX, 4th dimenison journey
+		Rotate(angleXW, vx, vw); //Shift + MouseY, 4th dimenison journey
+
+		//Prioritized rotation inside current 3d-slice
+		Rotate(angleYZ, vy, vz); //roll
+		Rotate(angleXZ, vx, vz); //MouseX, rotate left and right
+		Rotate(angleXY, vx, vy); //MouseY, up and down rotation
+	}
+
+	//Align 3d-slice to specific degree multiplier (called rounder)
+	void RoundAngleW(int rounder = 90)
+	{
+		angleXW = round(angleXW / rounder) * (float)rounder;
+		angleZW = round(angleZW / rounder) * (float)rounder;
+		angleYW = round(angleYW / rounder) * (float)rounder;
+
+		SetCurrentRotation();
+	}
+
+	void RotateAngle(float& axisAngle, glm::vec4& va, glm::vec4& vb, float degree)
+	{	
+		axisAngle += degree;
+
+		//All angles allowed to be -180 to 180 degrees going robin-round
+		while (axisAngle > 180)
+			axisAngle -= 360;
+		while (axisAngle < -180)
+			axisAngle += 360;
+
+		//pitch angle restiction to avoid MouseY backflip rotation
+		angleXY = std::max(angleXY, -90.0f);
+		angleXY = std::min(angleXY, +90.0f);
+
+		SetCurrentRotation();
+	}
+
 	void SetNewPos(glm::vec4 v, float delta, int sign)
 	{
 		float safeDist;
@@ -73,8 +133,6 @@ public:
 			Reset();
 			pos = glm::vec4(1.01f, 6.99f, 1.01f, 3.5f);
 			lastPos = pos;
-			RotateXZ(45.0f);
-			RotateXY(-30.0f);
 			noclip = false;
 		}
 
@@ -86,12 +144,12 @@ public:
 	void MoveZ(float d, int sign) { SetNewPos(vz, d, sign); }
 	void MoveW(float d, int sign) { SetNewPos(vw, d, sign); }
 
-	void RotateXY(float a) { Rotate(a, vx, vy); }
-	void RotateXZ(float a) { Rotate(a, vx, vz); }
-	void RotateXW(float a) { Rotate(a, vx, vw); }
-	void RotateYZ(float a) { Rotate(a, vy, vz); }
-	void RotateYW(float a) { Rotate(a, vy, vw); }
-	void RotateZW(float a) { Rotate(a, vz, vw); }
+	void RotateXY(float a) { RotateAngle(angleXY, vx, vy, a); }
+	void RotateXZ(float a) { RotateAngle(angleXZ, vx, vz, a); }
+	void RotateXW(float a) { RotateAngle(angleXW, vx, vw, a); }
+	void RotateYZ(float a) { RotateAngle(angleYZ, vy, vz, a); }
+	void RotateYW(float a) { RotateAngle(angleYW, vy, vw, a); }
+	void RotateZW(float a) { RotateAngle(angleZW, vz, vw, a); }
 
 	void Print()
 	{
@@ -108,6 +166,17 @@ public:
 	glm::vec4 vw;
 	glm::vec4 pos;
 	glm::vec4 lastPos;
+
+	//inside 3d-slice rotation angles
+	float angleXY; 
+	float angleXZ; 
+	float angleYZ;
+
+	//3d slice definition rotation angles
+	float angleXW;
+	float angleYW;
+	float angleZW; 
+
 	bool noclip = false;
 
 	Field* field = nullptr;

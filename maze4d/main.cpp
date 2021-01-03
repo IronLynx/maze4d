@@ -38,6 +38,8 @@ static Game game;
 
 bool isFullscreen = false;
 bool isMouseLocked = true;
+bool isMenu = true;
+
 glm::i32vec2 windowSize(game.viewWidth*game.viewScale, game.viewHeight*game.viewScale);
 glm::i32vec2 windowPos(0, 0);
 
@@ -47,10 +49,63 @@ static void OnError(int error, const char* description)
 	CriticalError(description);
 }
 
-void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void ExitMenu()
+{
+	isMenu = false;
+	game.userInterface->InitMenu();
+}
+
+
+void OnKeyInputMenu(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+		game.userInterface->NextMenuItem();
+
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+		game.userInterface->PreviousMenuItem();
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	{
+		UI_ACTION_CODE actionCode = game.userInterface->OnCancel();
+		switch (actionCode)
+		{
+		case UI_ACTION_GO:
+			ExitMenu();
+			break;
+		case UI_ACTION_NOTHING:
+			break;
+		}
+	}
+
+	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+	{
+		UI_ACTION_CODE actionCode = game.userInterface->OnSelect();
+		switch (actionCode)
+		{
+		case UI_ACTION_EXIT:
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+			break;
+		case UI_ACTION_GO:
+			ExitMenu();
+			break;
+		case UI_ACTION_RESTART:
+			game.player.Reset();
+			ExitMenu();
+			break;
+		case UI_ACTION_NEWGAME:
+			game.NewGame();
+			ExitMenu();
+			break;
+		case UI_ACTION_NOTHING:
+			break;
+		}
+	}
+}
+
+void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		isMenu = true; 	
 
 	if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
 	{
@@ -116,8 +171,13 @@ void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 		if (action == GLFW_PRESS)
 			game.playerController->isMouseRotateW = true;
 		else if (action == GLFW_RELEASE)
+		{
 			game.playerController->isMouseRotateW = false;
+		}
 	}
+
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+		game.player.RoundAngleW();
 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		game.player.Reset();
@@ -134,12 +194,26 @@ void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 		isMouseLocked = !isMouseLocked;
 	}
+
 	if (key == GLFW_KEY_Y && action == GLFW_PRESS)
 		game.player.Print();
+
+	if (key == GLFW_KEY_B && action == GLFW_PRESS)
+	{
+		game.player.ResetAngle();
+	}
+}
+
+void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (isMenu)
+		OnKeyInputMenu(window, key, scancode, action, mods);
+	else
+		OnKeyInputInGame(window, key, scancode, action, mods);
 }
 
 void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods)
-{
+{	
 	if ((button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT) && action == GLFW_PRESS)
 	{
 		if (isMouseLocked)
@@ -167,7 +241,7 @@ void OnMouseInput(GLFWwindow* window, double xpos, double ypos) {
 		relY = ypos - lastYpos;
 	}
 
-	if (isMouseLocked)
+	if (isMouseLocked && !isMenu)
 	{
 		if (game.playerController->isMouseRotateW)
 		{
@@ -341,7 +415,15 @@ uint8_t* InitGame(GLFWwindow* window)
 
 void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsigned int VAO, Shader* shader, uint8_t* texData)
 {
-	game.Render(texData);
+	if (!isMenu || game.userInterface->reRenderBackground)
+	{
+		game.Render(texData);
+		game.userInterface->reRenderBackground = false;
+	}
+	else
+	{
+		game.userInterface->Render(texData);
+	}
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
