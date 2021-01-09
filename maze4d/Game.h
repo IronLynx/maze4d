@@ -8,7 +8,6 @@
 #include <Field.h>
 #include <Renderer.h>
 #include <Cube.h>
-#include <UserInterface.h>
 
 class Game
 {
@@ -25,14 +24,15 @@ public:
 			delete cfg;
 		if (renderer != nullptr)
 			delete renderer;
-		if (userInterface != nullptr)
-			delete userInterface;
 	}
 
 	void Init();
 	void Render(uint8_t* buffer);
+	void ReinitVideoConfig();
+	bool NeedReconfigureResolution = false;
 
 	void NewGame();
+	void ApplyNewParameters();
 
 	int viewWidth;
 	int viewHeight;
@@ -41,11 +41,11 @@ public:
 
 	Player player;
 	PlayerController* playerController = nullptr;
-	UserInterface* userInterface = nullptr;
+
+	Config* cfg = nullptr;
+	Field* field = nullptr; //to get roo
 
 private:
 	Raycaster raycaster;
-	Field* field = nullptr;
-	Config* cfg = nullptr;
 	Renderer* renderer = nullptr;
 };
