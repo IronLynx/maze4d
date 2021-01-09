@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Source files\UserInterface">
+      <UniqueIdentifier>{56695b09-2e16-4143-91a5-d211a643e6cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -31,6 +34,27 @@
     </ClCompile>
     <ClCompile Include="Cube.cpp">
       <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserInterfaceClasses.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="MainUiController.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="MainMenu.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="MainMenuSettings.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsMenu.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="HotkeysMenu.cpp">
+      <Filter>Source files\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsMenuGameStart.cpp">
+      <Filter>Source files\UserInterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,7 +97,10 @@
     <ClInclude Include="PlayerController.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="UserInterface.h">
+    <ClInclude Include="Header.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="UserInterfaceClasses.h">
       <Filter>Header files</Filter>
     </ClInclude>
   </ItemGroup>

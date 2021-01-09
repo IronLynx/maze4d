@@ -173,15 +173,22 @@ xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="Field.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="HotkeysMenu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MainMenuSettings.cpp" />
+    <ClCompile Include="MainUiController.cpp" />
     <ClCompile Include="Maze.cpp" />
+    <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="SettingsMenu.cpp" />
+    <ClCompile Include="SettingsMenuGameStart.cpp" />
+    <ClCompile Include="UserInterfaceClasses.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\glad\include\glad\glad.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Cube.h" />
-    <ClInclude Include="UserInterface.h" />
+    <ClInclude Include="Header.h" />
     <ClInclude Include="Maze.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerController.h" />
@@ -191,6 +198,7 @@ xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="UserInterfaceClasses.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
