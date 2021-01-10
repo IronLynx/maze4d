@@ -252,9 +252,9 @@ public:
 
 			if (groundRotation)
 				if (abs(vx_basis.w) > abs(vx_basis.z))
-					RotateToZero(vw_basis.z, vx_basis, vw_basis, 1);
+					RotateToZero(vx_basis.z, vx_basis, vz_basis, -1);
 				else
-					RotateToZero(vw_basis.w, vz_basis, vw_basis, 1);
+					RotateToZero(vx_basis.w, vx_basis, vz_basis, -1);
 		}
 		else 
 		{//vw_z aligment to 1/-1
