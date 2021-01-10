@@ -334,7 +334,7 @@ private:
 	}
 	
 	std::list<ConfigParam> PARAM_LIST{
-		{ "width", { "video", CFG_TYPE_INT, "640", "" } },
+		{ "width", { "video", CFG_TYPE_INT, "480", "" } },
 		{ "height",{ "video", CFG_TYPE_INT, "360", "" } },
 		{ "window_scale",{ "video", CFG_TYPE_FLOAT, "2.0", "" } },
 		{ "maze_size_x",{ "game", CFG_TYPE_INT,   "3", "" } },
