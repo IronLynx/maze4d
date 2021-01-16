@@ -336,6 +336,8 @@ public:
 			Reset();
 			pos = glm::vec4(1.01f, 6.99f, 1.01f, 3.5f);
 			lastPos = pos;
+			RotateXZ(45.0f);
+			RotateXY(-30.0f);
 			noclip = false;
 		}
 
