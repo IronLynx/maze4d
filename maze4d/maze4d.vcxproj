@@ -179,6 +179,7 @@ xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
     <ClCompile Include="MainUiController.cpp" />
     <ClCompile Include="Maze.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="SettingsMenu.cpp" />
     <ClCompile Include="SettingsMenuGameStart.cpp" />
     <ClCompile Include="UserInterfaceClasses.cpp" />
@@ -188,7 +189,6 @@ xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
     <ClInclude Include="..\glad\include\glad\glad.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Cube.h" />
-    <ClInclude Include="Header.h" />
     <ClInclude Include="Maze.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerController.h" />

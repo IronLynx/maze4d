@@ -159,7 +159,7 @@ void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int
 	}
 
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
-		game.player.RoundAngleW();
+		game.player.AlignRotation();
 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		game.player.Reset();

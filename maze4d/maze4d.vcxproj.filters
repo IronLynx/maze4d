@@ -56,6 +56,9 @@
     <ClCompile Include="SettingsMenuGameStart.cpp">
       <Filter>Source files\UserInterface</Filter>
     </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\glad\include\glad\glad.h">
@@ -95,9 +98,6 @@
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="PlayerController.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Header.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="UserInterfaceClasses.h">
