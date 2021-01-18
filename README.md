@@ -8,6 +8,7 @@ Just clone the repository, and build `maze4d.sln` in Visual Studio 2015.
 Project includes following dependencies:
 - glfw-3.3.2
 - glm-0.9.9.8
+- freetype-2.10.4
 
 ## Controls
 ```
@@ -24,13 +25,15 @@ Project includes following dependencies:
  YZ (roll):  E,    Q
  YW:         Z,    C
  ZW:         M,    N  (or mouseX + LSHIFT)
+ Align W-angle:    TAB
+ Reset W-angle:    B
 
  ------------ Other ------------
  Reset player:      P
  Noclip:            F8
  Fullscreen:        F11
  Lock/unlock mouse: SPACE or mouse button
- Quit:              ESC
+ Menu:              ESC
 ```
 
 <details><summary>Screenshots</summary>
