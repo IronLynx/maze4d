@@ -12,6 +12,7 @@
 #include <glm/matrix.hpp>
 #include <glm/vector_relational.hpp>
 #include <glm/integer.hpp>
+#include <fstream>
 
 #include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
@@ -91,6 +92,12 @@ static void Print(T t)
 template<typename T>
 static void PrintN(T t)
 {
+	/*
+	std::ofstream outfile;
+
+	outfile.open("Diagtostics.txt", std::ios_base::app); // append instead of overwrite
+	outfile << t;	
+	*/
 	std::cout << t;
 }
 

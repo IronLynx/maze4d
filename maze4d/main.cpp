@@ -33,11 +33,15 @@ First person four-dimensional maze game, visualized by 3D cross-sections.
 
 #include <Utils.h>
 #include <Game.h>
+#include <UserInterfaceClasses.h>
 
 static Game game;
+MainUiController mainUi = MainUiController(&game);
 
 bool isFullscreen = false;
 bool isMouseLocked = true;
+bool restart = true;
+
 glm::i32vec2 windowSize(game.viewWidth*game.viewScale, game.viewHeight*game.viewScale);
 glm::i32vec2 windowPos(0, 0);
 
@@ -47,10 +51,43 @@ static void OnError(int error, const char* description)
 	CriticalError(description);
 }
 
-void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void processUiAction(GLFWwindow* window, UI_ACTION_CODE actionCode)
+{
+	switch (actionCode)
+	{
+	case UI_ACTION_EXIT:
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		break;
+	case UI_ACTION_NOTHING:
+		break;
+	}
+}
+
+void OnKeyInputMenu(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_DOWN && action != GLFW_RELEASE)
+		mainUi.NextMenuItem();
+
+	else if (key == GLFW_KEY_UP && action != GLFW_RELEASE)
+		mainUi.PreviousMenuItem();
+
+	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		processUiAction(window, mainUi.OnCancel());
+
+	else if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+		processUiAction(window, mainUi.OnSelect());
+
+	else if (action == GLFW_PRESS)
+		mainUi.OnKeyInput(key);
+}
+
+void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	{
+		mainUi.OnCancel();
+		return;
+	}
 
 	if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
 	{
@@ -116,8 +153,13 @@ void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 		if (action == GLFW_PRESS)
 			game.playerController->isMouseRotateW = true;
 		else if (action == GLFW_RELEASE)
+		{
 			game.playerController->isMouseRotateW = false;
+		}
 	}
+
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+		game.player.AlignRotation();
 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		game.player.Reset();
@@ -134,12 +176,26 @@ void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 		isMouseLocked = !isMouseLocked;
 	}
+
 	if (key == GLFW_KEY_Y && action == GLFW_PRESS)
 		game.player.Print();
+
+	if (key == GLFW_KEY_B && action == GLFW_PRESS)
+	{
+		game.player.ResetBasis();
+	}
+}
+
+void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (mainUi.isMenu)
+		OnKeyInputMenu(window, key, scancode, action, mods);
+	else
+		OnKeyInputInGame(window, key, scancode, action, mods);
 }
 
 void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods)
-{
+{	
 	if ((button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT) && action == GLFW_PRESS)
 	{
 		if (isMouseLocked)
@@ -167,22 +223,31 @@ void OnMouseInput(GLFWwindow* window, double xpos, double ypos) {
 		relY = ypos - lastYpos;
 	}
 
-	if (isMouseLocked)
+	if (isMouseLocked && !mainUi.isMenu)
 	{
 		if (game.playerController->isMouseRotateW)
 		{
-			game.player.RotateXW(float(-relY*game.playerController->mouseSens));
-			game.player.RotateZW(float(relX*game.playerController->mouseSens));
+			game.player.RotateXW(float(-relY*game.playerController->mouseSens/10));
+			game.player.RotateZW(float(relX*game.playerController->mouseSens / 10));
 		}
 		else
 		{
-			game.player.RotateXY(float(-relY*game.playerController->mouseSens));
-			game.player.RotateXZ(float(relX*game.playerController->mouseSens));
+			game.player.RotateXY(float(-relY*game.playerController->mouseSens / 10));
+			game.player.RotateXZ(float(relX*game.playerController->mouseSens / 10));
 		}
 	}
 
 	lastXpos = xpos;
 	lastYpos = ypos;
+}
+
+void OnScrollInput(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (isMouseLocked && !mainUi.isMenu)
+	{
+		game.player.RotateZW(float(-yoffset*90.0f));
+		//game.player.RotateZW(float(xoffset*game.playerController->mouseSens));
+	}
 }
 
 
@@ -311,17 +376,20 @@ void InitScene(unsigned int& screenTex, unsigned int& VAO, Shader*& shader)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+
+
 uint8_t* InitGame(GLFWwindow* window)
 {
 	game.Init();
 
 	int texDataSize = game.viewWidth * game.viewHeight * 3;
-	uint8_t *texData = new uint8_t[texDataSize];
+	uint8_t* texData = new uint8_t[texDataSize];
 	memset(texData, 0, texDataSize);
 
 	glfwSetKeyCallback(window, OnKeyInput);
 	glfwSetMouseButtonCallback(window, OnMouseButtonInput);
 	glfwSetCursorPosCallback(window, OnMouseInput);
+	glfwSetScrollCallback(window, OnScrollInput);
 	glfwSetFramebufferSizeCallback(window, OnResize);
 
 	int width, height;
@@ -339,9 +407,20 @@ uint8_t* InitGame(GLFWwindow* window)
 	return texData;
 }
 
+
+
 void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsigned int VAO, Shader* shader, uint8_t* texData)
 {
-	game.Render(texData);
+	if (game.NeedReconfigureResolution)
+	{
+		restart = true;
+		game.NeedReconfigureResolution = false;
+		mainUi.reRenderBackground = true;
+		game.ReinitVideoConfig();
+		return;
+	}
+	else
+		mainUi.Render(texData);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -359,36 +438,47 @@ void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsig
 	glfwPollEvents();
 }
 
+
+
 int main()
 {
-	GLFWwindow* window = InitGL();
-	uint8_t* texData = InitGame(window);
-
-	unsigned int screenTex;
-	unsigned int VAO;
-	Shader* shader = nullptr;
-	InitScene(screenTex, VAO, shader);
-
-	double startFrameTime = 0, delta = 0;
-	//double targetFrameTime = 0.02; // fps lock
-	while (!glfwWindowShouldClose(window))
+	while (restart)
 	{
-		startFrameTime = glfwGetTime();
-		game.playerController->Update(delta);
-		RenderFrame(delta, window, screenTex, VAO, shader, texData);
-		delta = glfwGetTime() - startFrameTime;
-		//if (delta < targetFrameTime)
-		//{
-		//	Windows::Sleep(int((targetFrameTime - delta) * 1000));
-		//	delta = targetFrameTime;
-		//}
+		restart = false;
+		game.ReinitVideoConfig();		
+		windowSize = glm::i32vec2(game.viewWidth*game.viewScale, game.viewHeight*game.viewScale);
+
+		//mainUi = MainUiController(&game);
+
+		GLFWwindow* window = InitGL();
+		uint8_t* texData = InitGame(window);
+
+		unsigned int screenTex;
+		unsigned int VAO;
+		Shader* shader = nullptr;
+		InitScene(screenTex, VAO, shader);
+
+		double startFrameTime = 0, delta = 0;
+		//double targetFrameTime = 0.02; // fps lock
+		while (!glfwWindowShouldClose(window) && restart==false)
+		{
+			startFrameTime = glfwGetTime();
+			game.playerController->Update(delta);
+			RenderFrame(delta, window, screenTex, VAO, shader, texData);
+			delta = glfwGetTime() - startFrameTime;
+			//if (delta < targetFrameTime)
+			//{
+			//	Windows::Sleep(int((targetFrameTime - delta) * 1000));
+			//	delta = targetFrameTime;
+			//}
+		}
+
+		delete[] texData;
+		delete shader;
+
+		glfwDestroyWindow(window);
+		glfwTerminate();
 	}
-
-	delete[] texData;
-	delete shader;
-
-	glfwDestroyWindow(window);
-	glfwTerminate();
 	return 0;
 }
 

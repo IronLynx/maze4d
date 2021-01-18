@@ -14,6 +14,8 @@ Game::Game()
 
 void Game::Init()
 {
+	
+
 	glm::ivec4 mazeSize = glm::ivec4(
 		glm::max(glm::abs(cfg->GetInt("maze_size_x")), 1),
 		glm::max(glm::abs(cfg->GetInt("maze_size_y")), 1),
@@ -35,7 +37,7 @@ void Game::Init()
 
 	Cube::Init();
 
-	player.Init(field);
+	player.Init(field, cfg->GetBool("ground_rotation"));
 
 	renderer = new Renderer(&player, field, &raycaster, cfg->GetInt("multithreading") != 0, cfg->GetInt("skip_pixels") != 0);
 
@@ -44,7 +46,54 @@ void Game::Init()
 	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player);
 }
 
+void Game::ReinitVideoConfig()
+{
+	viewWidth = glm::abs(cfg->GetInt("width"));
+	viewHeight = glm::abs(cfg->GetInt("height"));
+	viewScale = glm::abs(cfg->GetFloat("window_scale"));
+	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
+	
+}
+
+void Game::ApplyNewParameters()
+{
+	if (playerController != nullptr)
+		delete playerController;
+	if (renderer != nullptr)
+		delete renderer;
+
+	//cfg = new Config();
+	renderer = new Renderer(&player, field, &raycaster, cfg->GetInt("multithreading") != 0, cfg->GetInt("skip_pixels") != 0);
+	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player);
+	player.groundRotation = cfg->GetBool("ground_rotation");
+
+
+	Random::GetInstance()->Init(cfg->GetInt("seed"));
+
+	viewScale = glm::abs(cfg->GetFloat("window_scale"));
+	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
+	
+	int newViewWidth = glm::abs(cfg->GetInt("width"));
+	int newViewHeight = glm::abs(cfg->GetInt("height"));
+
+	if (newViewHeight != viewHeight || newViewWidth != viewWidth)
+		NeedReconfigureResolution = true;
+
+}
+
+void Game::NewGame()
+{
+	if (playerController != nullptr)
+		delete playerController;
+	if (field != nullptr)
+		delete field;
+	if (renderer != nullptr)
+		delete renderer;
+
+	Init();	
+}
+
 void Game::Render(uint8_t* buffer)
 {
-	renderer->FillTexData(buffer, viewWidth, viewHeight);
+	renderer->FillTexData(buffer, viewWidth, viewHeight);	
 }

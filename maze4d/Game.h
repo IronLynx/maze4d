@@ -28,6 +28,11 @@ public:
 
 	void Init();
 	void Render(uint8_t* buffer);
+	void ReinitVideoConfig();
+	bool NeedReconfigureResolution = false;
+
+	void NewGame();
+	void ApplyNewParameters();
 
 	int viewWidth;
 	int viewHeight;
@@ -37,9 +42,10 @@ public:
 	Player player;
 	PlayerController* playerController = nullptr;
 
+	Config* cfg = nullptr;
+	Field* field = nullptr; //to get roo
+
 private:
 	Raycaster raycaster;
-	Field* field = nullptr;
-	Config* cfg = nullptr;
 	Renderer* renderer = nullptr;
 };
