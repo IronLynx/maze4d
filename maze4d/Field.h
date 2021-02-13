@@ -1,8 +1,11 @@
 #pragma once
 
-#include <Utils.h>
+#include <glad/glad.h>
+#include <shader.h>
+
 #include <Texture.h>
 #include <Maze.h>
+
 
 #define WALL_BLOCK  (1 << 0)
 #define LIGHT_BLOCK (1 << 1)
@@ -14,13 +17,14 @@ typedef uint32_t Light_t;
 typedef Cell_t* Map_t;
 typedef Light_t* LightMap_t;
 
+
 class Field
 {
 public:
 	Field(const glm::ivec4 size, const int lightDist, const int roomSize);
 	~Field();
 
-	void Init(Maze* maze);
+	void Init(Maze* maze, Shader* shader);
 	
 	void CreateWinRoom();
 
@@ -35,7 +39,12 @@ public:
 
 	const int roomSize;
 
+	void LoadMazeToGL(Shader* shader);
+
+	glm::ivec4 size;
+
 private:
+	Shader* shader;
 	void CreateCube(int x, int y, int z, int w);
 
 	void CreateBorders();
@@ -48,7 +57,7 @@ private:
 
 	void GenerateLightRecursive(int px, int py, int pz, int pw, unsigned int level, int side);
 
-	glm::ivec4 size;
+	
 	const int totalSize;
 	const int lightDist;
 	int cubesCount = 0;
@@ -61,3 +70,4 @@ private:
 
 	const glm::ivec4 winMapSize = glm::ivec4(9, 9, 9, 9);
 };
+

@@ -10,14 +10,14 @@ void UserInterfaceItem::RenderRectangle(uint8_t* buffer, int posX, int posY, int
 	int yGlobalOffset = posY;
 	int maxPixPos = 0;
 
-	int maxPosShouldBe = maxWidth*maxHeight * 3 - 1;
+	int maxPosShouldBe = maxWidth*maxHeight * 4 - 1;
 
 	for (int rows = 0; rows < height; rows++)
 		for (int xi = 0; xi < width; xi++)
 		{
-			int pixPos = (rows + yGlobalOffset) * maxWidth * 3 + (xi + xGlobalOffset) * 3;
+			int pixPos = (rows + yGlobalOffset) * maxWidth * 4 + (xi + xGlobalOffset) * 4;
 
-			if (pixPos < maxWidth*maxHeight * 3 &&
+			if (pixPos < maxWidth*maxHeight * 4 &&
 				pixPos > 0)
 			{
 				
@@ -27,6 +27,7 @@ void UserInterfaceItem::RenderRectangle(uint8_t* buffer, int posX, int posY, int
 				buffer[pixPos] = color.x;// *alpha + buffer[pixPos] * (1 - alpha);
 				buffer[pixPos + 1] = color.y;// *alpha + buffer[pixPos + 1] * (1 - alpha);
 				buffer[pixPos + 2] = color.z;// *alpha + buffer[pixPos + 2] * (1 - alpha);
+				buffer[pixPos + 3] = 255; //UI rectangles are always opaque
 			}
 		}
 	
@@ -77,15 +78,15 @@ void UserInterfaceItem::RenderUItext(std::string text, int fontSize, uint8_t* bu
 					xi + xGlobalOffset > 0)
 				{
 					int glyphPixGray = ch->bitmap.buffer[((ch->bitmap.rows - rows - 1) * ch->bitmap.pitch + xi)];
-					int pixPos = (rows + yOffset) * maxWidth * 3 + (xi + xGlobalOffset) * 3;
+					int pixPos = (rows + yOffset) * maxWidth * 4 + (xi + xGlobalOffset) * 4;
 
 					float alpha = (float)glyphPixGray / (float)ch->bitmap.num_grays;
 
 					buffer[pixPos] = (unsigned int)round(color.x * alpha + buffer[pixPos] * (1 - alpha));
 					buffer[pixPos + 1] = (unsigned int)round(color.y * alpha + buffer[pixPos + 1] * (1 - alpha));
 					buffer[pixPos + 2] = (unsigned int)round(color.z * alpha + buffer[pixPos + 2] * (1 - alpha));
+					buffer[pixPos + 3] = (unsigned int)round(255 * alpha + buffer[pixPos + 3] * (1 - alpha));
 				}
-
 
 		xGlobalOffset += ch->advance.x / 64; //advance is in Cartesian scale, which means 64 cartesian steps equals 1 pixel
 	}
@@ -113,11 +114,26 @@ void UserInterfaceItem::RenderButton(Button button, uint8_t* buffer, int posX, i
 
 	RenderRectangle(buffer, posX, posY, button.width, button.height, blackPixel);
 	RenderRectangle(buffer, posX + borderWidth, posY + borderWidth, button.width - borderWidth * 2, button.height - borderWidth * 2, backgroundPixel);
+	
 
 	std::replace(button.text.begin(), button.text.end(), '_', ' ');
 	std::transform(button.text.begin(), ++button.text.begin(), button.text.begin(), ::toupper);
 
 	RenderUItext(button.text, fontSize, buffer, posX + button.width / 15, posY + button.height * 10 / 27, blackPixel);
+
+	//Add helper text at the bottom of the screen
+	if (isHovered)
+	{
+		if (button.helpText.size() == 0)
+			button.helpText = " ";
+		int helperFontSizeX = game->viewWidth / button.helpText.size() * 14 / 10;
+		int helperFontSizeY = game->viewHeight / 35;
+
+		int helperFontSize = std::min(helperFontSizeX, helperFontSizeY);
+
+		RenderRectangle(buffer, 0, 0, game->viewWidth, helperFontSize+10, backgroundPixel);
+		RenderUItext(button.helpText, helperFontSize, buffer, 10, 10, blackPixel);
+	}
 }
 
 

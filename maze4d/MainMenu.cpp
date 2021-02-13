@@ -8,12 +8,12 @@ MainMenu::MainMenu(Game* game) : UserInterfaceItem(game)
 	int i = 0;
 	buttonList = std::list<Button>();
 
-	buttonList.push_back(Button({ i++, UI_ACTION_CLOSE_ITEM, "Continue" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_RESTART, "Restart" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_NEWGAME,"New game" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_HOTKEYS,"Hotkeys" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_SETTINGS,"Settings" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_EXIT, "Quit" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_CLOSE_ITEM, "Continue", "Back to the game" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_RESTART, "Restart", "Restart application and reload all" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_NEWGAME,"New game", "Generate new maze and start new game" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_HOTKEYS,"Hotkeys", "List of hotkeys that can be used during the game" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_SETTINGS,"Settings", "Adjustable parameters" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_EXIT, "Quit", "Close application and exist the game" }));
 
 	RecalculateButtonWidth();
 
@@ -49,6 +49,7 @@ void MainMenu::Render(uint8_t* buffer)
 		RenderButton(*it, buffer, xPosition, yPosition - yDelta, &*it == &*activeButton);
 		yPosition = yPosition - it->height - yDelta;
 	}
+	
 }
 
 UI_ACTION_CODE MainMenu::OnSelect()

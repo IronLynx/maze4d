@@ -1,5 +1,6 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
+
+
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -17,32 +18,62 @@ public:
 	// ------------------------------------------------------------------------
 	Shader(const char* vertexCode, const char* fragmentCode)
 	{
+		GenerateShader(vertexCode, fragmentCode);		
+	}
+
+	void GenerateShader(const char* vertexCode, const char* fragmentCode)
+	{
 		// 1. compile shaders
 		unsigned int vertex, fragment;
+
 		// vertex shader
 		vertex = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertex, 1, &vertexCode, NULL);
 		glCompileShader(vertex);
 		checkCompileErrors(vertex, "VERTEX");
+
 		// fragment Shader
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragment, 1, &fragmentCode, NULL);
 		glCompileShader(fragment);
 		checkCompileErrors(fragment, "FRAGMENT");
+
 		// shader Program
 		ID = glCreateProgram();
 		glAttachShader(ID, vertex);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
 		checkCompileErrors(ID, "PROGRAM");
+
 		// delete the shaders as they're linked into our program now and no longer necessery
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
 	}
+
+	Shader() {}
+
+	void LoadFromFiles(std::string vertexFile, std::string fragmentFile)
+	{
+		std::ostringstream sstream;
+		std::ifstream fs(vertexFile);
+		sstream << fs.rdbuf();
+		std::string VertexString(sstream.str());
+		const char* Vptr = VertexString.c_str();
+
+		std::ifstream fs1(fragmentFile);
+		std::ostringstream sstream1;
+		sstream1 << fs1.rdbuf();
+		std::string FragmentString(sstream1.str());
+		const char* Fptr = FragmentString.c_str();
+
+		GenerateShader(Vptr, Fptr);
+	}
+
 	// activate the shader
 	// ------------------------------------------------------------------------
 	void use()
 	{
+		
 		glUseProgram(ID);
 	}
 	// utility uniform functions
@@ -131,4 +162,4 @@ private:
 		}
 	}
 };
-#endif
+

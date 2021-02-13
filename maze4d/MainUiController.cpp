@@ -13,7 +13,10 @@ void MainUiController::Render(uint8_t* buffer)
 {
 	if (openedUiList.empty()) isMenu = false;
 
-	if (openedUiList.empty() || reRenderBackground)
+	if (game->CpuRender == 0)
+		memset(buffer, 0, game->viewWidth * game->viewHeight * 4);
+
+	if (game->CpuRender > 0 && (reRenderBackground || openedUiList.empty()))
 	{
 		game->Render(buffer);
 		reRenderBackground = false;
@@ -87,6 +90,7 @@ UI_ACTION_CODE MainUiController::OnSelect()
 
 UI_ACTION_CODE MainUiController::OnCancel()
 {
+	reRenderBackground = true;
 	if (openedUiList.empty())
 	{
 		openedUiList.push(new MainMenu(game));
@@ -130,6 +134,10 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 	std::stringstream stream;
 
 	int floatLength = 6;
+
+	stream.str(std::string()); //empty string
+	stream << " FPS:" << this->FPS;
+	RenderUItext(stream.str(), fontSize, buffer, maxWidth - fontSize*5, maxHeight - paddingY);
 
 	if (game->player.groundRotation)
 	{
@@ -180,7 +188,7 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 		anglesText = stream.str();
 		RenderUItext(anglesText, fontSize, buffer, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
-
+		
 		RenderUItext("vx_basis=" + vec2str(player->vx_basis) + " vx=" + vec2str(player->vx), fontSize, buffer, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 
@@ -192,6 +200,10 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 
 		RenderUItext("vw_basis=" + vec2str(player->vw_basis) + " vw=" + vec2str(player->vw), fontSize, buffer, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
+		/**/
+
+		//RenderUItext(game->field->MapToString(), fontSize, buffer, paddingX, maxHeight - paddingY);
+		//paddingY += lineSpace;
 	}
 
 }

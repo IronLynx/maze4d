@@ -27,11 +27,13 @@ First person four-dimensional maze game, visualized by 3D cross-sections.
  Quit:              ESC
 
 -----------------------------------------------------------------------------*/
+#pragma once
 
 #include <glad/glad.h> // generated from https://glad.dav1d.de
-#include "shader.h"
+#include <shader.h>
 
 #include <Utils.h>
+
 #include <Game.h>
 #include <UserInterfaceClasses.h>
 
@@ -302,30 +304,10 @@ GLFWwindow* InitGL()
 	return window;
 }
 
-void InitScene(unsigned int& screenTex, unsigned int& VAO, Shader*& shader)
-{
-	// build and compile our shader zprogram
-	// ------------------------------------
-	shader = new Shader(
-		"#version 330 core\n"
-		"layout(location = 0) in vec3 aPos;\n"
-		"layout(location = 1) in vec3 aColor;\n"
-		"layout(location = 2) in vec2 aTexCoord;\n"
-		"out vec3 ourColor;\n"
-		"out vec2 TexCoord;\n"
-		"void main(){\n"
-		"gl_Position = vec4(aPos, 1.0);\n"
-		"ourColor = aColor;\n"
-		"TexCoord = vec2(aTexCoord.x, aTexCoord.y);}\n",
 
-		"#version 330 core\n"
-		"out vec4 FragColor;\n"
-		"in vec3 ourColor;\n"
-		"in vec2 TexCoord;\n"
-		"uniform sampler2D texture1;\n"
-		"void main(){\n"
-		"FragColor = texture(texture1, TexCoord);}\n"
-	);
+
+void InitScene(unsigned int& screenTex, unsigned int& VAO)
+{
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -380,9 +362,7 @@ void InitScene(unsigned int& screenTex, unsigned int& VAO, Shader*& shader)
 
 uint8_t* InitGame(GLFWwindow* window)
 {
-	game.Init();
-
-	int texDataSize = game.viewWidth * game.viewHeight * 3;
+	int texDataSize = game.viewWidth * game.viewHeight * 4;
 	uint8_t* texData = new uint8_t[texDataSize];
 	memset(texData, 0, texDataSize);
 
@@ -408,9 +388,34 @@ uint8_t* InitGame(GLFWwindow* window)
 }
 
 
+void UpdateShaderVariables(Shader* shader)
+{
+	glUseProgram(shader->ID);
+
+	GLint loc = glGetUniformLocation(shader->ID, "vx");
+	glUniform4f(loc, game.player.vx.x, game.player.vx.y, game.player.vx.z, game.player.vx.w);
+
+	loc = glGetUniformLocation(shader->ID, "vy");
+	glUniform4f(loc, game.player.vy.x, game.player.vy.y, game.player.vy.z, game.player.vy.w);
+
+	loc = glGetUniformLocation(shader->ID, "vz");
+	glUniform4f(loc, game.player.vz.x, game.player.vz.y, game.player.vz.z, game.player.vz.w);
+
+	loc = glGetUniformLocation(shader->ID, "vw");
+	glUniform4f(loc, game.player.vw.x, game.player.vw.y, game.player.vw.z, game.player.vw.w);
+
+	loc = glGetUniformLocation(shader->ID, "pos");
+	glUniform4f(loc, game.player.pos.x, game.player.pos.y, game.player.pos.z, game.player.pos.w);
+
+	loc = glGetUniformLocation(shader->ID, "CpuRender");
+	glUniform1i(loc, game.CpuRender);
+}
+
 
 void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsigned int VAO, Shader* shader, uint8_t* texData)
 {
+	UpdateShaderVariables(shader);
+
 	if (game.NeedReconfigureResolution)
 	{
 		restart = true;
@@ -422,20 +427,17 @@ void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsig
 	else
 		mainUi.Render(texData);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// bind textures on corresponding texture units
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, screenTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, game.viewWidth, game.viewHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.viewWidth, game.viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
 
 	shader->use();
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-	glfwSwapBuffers(window);
-	glfwPollEvents();
 }
 
 
@@ -447,16 +449,22 @@ int main()
 		restart = false;
 		game.ReinitVideoConfig();		
 		windowSize = glm::i32vec2(game.viewWidth*game.viewScale, game.viewHeight*game.viewScale);
-
 		//mainUi = MainUiController(&game);
 
 		GLFWwindow* window = InitGL();
 		uint8_t* texData = InitGame(window);
 
 		unsigned int screenTex;
-		unsigned int VAO;
-		Shader* shader = nullptr;
-		InitScene(screenTex, VAO, shader);
+		unsigned int VAOgame;
+		Shader* shaderGame = new Shader();
+		shaderGame->LoadFromFiles("VertexShader.hlsl", "FragmentRaycasting4d.hlsl");
+		InitScene(screenTex, VAOgame);
+		game.Init(shaderGame);
+		GLint gameResolutionLoc = glGetUniformLocation(shaderGame->ID, "gameResolution");
+		glUniform2i(gameResolutionLoc, game.viewWidth, game.viewHeight);
+		
+		int nbFrames = 0;
+		double lastTime = glfwGetTime();
 
 		double startFrameTime = 0, delta = 0;
 		//double targetFrameTime = 0.02; // fps lock
@@ -464,17 +472,24 @@ int main()
 		{
 			startFrameTime = glfwGetTime();
 			game.playerController->Update(delta);
-			RenderFrame(delta, window, screenTex, VAO, shader, texData);
+			RenderFrame(delta, window, screenTex, VAOgame, shaderGame, texData);
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+
 			delta = glfwGetTime() - startFrameTime;
-			//if (delta < targetFrameTime)
-			//{
-			//	Windows::Sleep(int((targetFrameTime - delta) * 1000));
-			//	delta = targetFrameTime;
-			//}
+
+			nbFrames++;
+			double currentTime = glfwGetTime();
+			if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
+												 // printf and reset timer
+				mainUi.FPS = (int) (nbFrames / float(currentTime - lastTime));
+				nbFrames = 0;
+				lastTime += 1.0;
+			}
 		}
 
 		delete[] texData;
-		delete shader;
+		delete shaderGame;
 
 		glfwDestroyWindow(window);
 		glfwTerminate();
