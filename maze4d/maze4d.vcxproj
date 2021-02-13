@@ -101,7 +101,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)*.dll" "$(OutDir)"
-xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
+xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"
+xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,7 +148,8 @@ xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)*.dll" "$(OutDir)"
-xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"</Command>
+xcopy /y /d  "$(ProjectDir)fonts\*.ttf" "$(OutDir)fonts\"
+xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
