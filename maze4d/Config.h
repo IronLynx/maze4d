@@ -348,7 +348,7 @@ private:
 		{ "seed",{ "game", CFG_TYPE_INT,  "-1", " # set -1 to use random seed" } },
 		{ "multithreading",{ "video", CFG_TYPE_BOOL,   "0", " #  (CPU RENDERING) 0 - disable; 1 - enable. WARNING: CPU usage can reach 100%" } },
 		{ "skip_pixels",{ "video", CFG_TYPE_BOOL,   "0", "  # (CPU RENDERING) set 1 to render all pixels each frame; 0 to render only half" } },
-		{ "anti_aliasing",{ "video", CFG_TYPE_INT,   "0", "  # (GPU RENDERING) 0 - x1; 1 - x4; 2 - x9" } },
+		{ "anti_aliasing",{ "video", CFG_TYPE_INT,   "1", "  # (GPU RENDERING) 0 - x1; 1 - x4; 2 - x9" } },
 		{ "vsync",{ "video", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable" } },		
 		{ "ground_rotation",{ "controls", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable. Shooter-like camera positioning" } },
 		{ "display_coords",{ "controls", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable. Displays maze coordinates." } },
