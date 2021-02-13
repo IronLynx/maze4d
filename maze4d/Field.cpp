@@ -20,8 +20,10 @@ Field::~Field()
 	delete[] winLightMap;
 }
 
-void Field::Init(Maze* maze)
+void Field::Init(Maze* maze, Shader* shader)
 {
+	this->shader = shader;
+
 	for (int i = 0; i < totalSize; i++)
 	{
 		curMap[i] = 0;
@@ -32,6 +34,8 @@ void Field::Init(Maze* maze)
 	CreateExit(maze);
 	GenerateWalls(maze);
 	GenerateLight(maze);
+
+	this->LoadMazeToGL(shader);
 
 	int memBytes = (sizeof(Cell_t) + sizeof(Light_t)) * (totalSize + winMapSize.x*winMapSize.y*winMapSize.z*winMapSize.z);
 	Log("cubesCount: ", cubesCount, ", mem(map): ", memBytes / 1024.0f / 1024.0f, " Mb");
@@ -329,6 +333,47 @@ void Field::GenerateLight(Maze* maze)
 			}
 		}
 	}
+	
+	for (int x = 0; x < size.x; x++)
+	{
+		for (int y = 0; y < size.y; y++)
+		{
+			for (int z = 0; z < size.z; z++)
+			{
+				for (int w = 0; w < size.w; w++)
+				{
+					for (int e = 0; e < EDGES_COUNT; e++)
+					{
+						int level = 15;
+						unsigned int scaledLevel = 10;
+
+						int index = GetIndex(x, y, z, w);
+						if (index == 0)
+							int b = 0;
+						bool isMapEdge = false;
+						if (x == 0 && e == NEG_X) isMapEdge = true;
+						if (y == 0 && e == NEG_Y) isMapEdge = true;
+						if (z == 0 && e == NEG_Z) isMapEdge = true;
+						if (w == 0 && e == NEG_W) isMapEdge = true;
+						if (x == size.x - 1 && e == POS_X) isMapEdge = true;
+						if (y == size.y - 1 && e == POS_Y) isMapEdge = true;
+						if (z == size.z - 1 && e == POS_Z) isMapEdge = true;
+						if (w == size.w - 1 && e == POS_W) isMapEdge = true;
+
+						if (isMapEdge)
+						{
+							// clear light
+							curLightMap[index] &= ~((Texture::LIGHT_GRAD - 1) << (e * 4));
+							// set light
+							curLightMap[index]  |= scaledLevel << (e * 4);
+						}
+
+					}
+				}
+			}
+		}
+	}
+	int i = 1;
 }
 
 void Field::CreateWinRoom()
@@ -336,6 +381,9 @@ void Field::CreateWinRoom()
 	curMap = winMap;
 	curLightMap = winLightMap;
 	size = winMapSize;
+
+	int mapSize = winMapSize.x*winMapSize.y*winMapSize.z*winMapSize.w;
+	memset(curMap, 0, mapSize);
 
 	// Generate walls
 	for (int x = 0; x < winMapSize.x; x++)
@@ -387,6 +435,8 @@ void Field::CreateWinRoom()
 			winLightMap[GetIndex(letters[i].x, letters[i].y, letters[i].z, w)] = UINT32_MAX;
 		}
 	}
+
+	this->LoadMazeToGL(shader);
 }
 
 void Field::GenerateLightRecursive(int px, int py, int pz, int pw, unsigned int level, int side)
@@ -406,6 +456,7 @@ void Field::GenerateLightRecursive(int px, int py, int pz, int pw, unsigned int 
 			curLightMap[index] &= ~((Texture::LIGHT_GRAD - 1) << (side * 4));
 			// set light
 			curLightMap[index] |= scaledLevel << (side * 4);
+			//curLightMap[index] = UINT32_MAX;
 		}
 		return;
 	}
@@ -443,3 +494,145 @@ Cell_t Field::GetCube(int x, int y, int z, int w)
 {
 	return curMap[GetIndex(x, y, z, w)];
 };
+
+void Field::LoadMazeToGL(Shader* shader)
+{
+	glUseProgram(shader->ID);
+
+	GLint mapSizeLoc = glGetUniformLocation(shader->ID, "mapSize");
+	glUniform4i(mapSizeLoc, size.x, size.y, size.z, size.w); // Texture unit 4 is for current map. 
+
+	int texWxMax = ceil(std::pow(size.w, 1 / 3.0f)); //cube root
+	int texWyMax = texWxMax;
+	int texWzMax = texWyMax;	
+	GLint MapWnAddedSizeLoc = glGetUniformLocation(shader->ID, "MapWnAddedSize");
+	glUniform3i(MapWnAddedSizeLoc, texWxMax, texWyMax, texWzMax); 
+	 
+
+	int texSizeX = size.x * texWxMax;
+	int texSizeY = size.y * texWyMax;
+	int texSizeZ = size.z * texWzMax;
+	GLint MapTexSizeLoc = glGetUniformLocation(shader->ID, "MapTexSize");
+	glUniform3i(MapTexSizeLoc, texSizeX, texSizeY, texSizeZ); 
+
+	//Convert 4-axis coordinates to 3-axis coordinates
+	//Encode w coordinate equally across all xyz coords
+	//returns INT value which encodes xyz point for 4d point
+	auto GetTexIndex = [&](int x, int y, int z, int w)
+	{
+		//Assume w coordinate is index of 3 other coordinates
+		//What are they if we have length for each of them?
+		int texWz = w / (texWxMax*texWyMax);
+		int texWy = (w % (texWxMax*texWyMax)) / texWxMax;
+		int texWx = (w % (texWxMax*texWyMax)) % texWxMax;
+
+		assert(w == texWz * texWxMax*texWyMax + texWy*texWxMax + texWx);
+
+		int texX = texWx * size.x + x;
+		int texY = texWy * size.y + y;
+		int texZ = texWz * size.z + z;
+		
+		return 4 * (texZ * texSizeY * texSizeX + texY * texSizeX + texX);
+	};
+
+	//each index is vec4 float structure 
+	//vec4.x - alpha channel for whole cube
+	//vec4.y - texture type (1 for regular, 2 for light)
+	//vec4.z - light level
+	uint64_t totalSizeForTexture = texSizeZ * texSizeY * texSizeX + texSizeY * texSizeX + texSizeX; //GetTexIndex(size.x, size.y, size.z, size.w);
+	uint8_t* curMapTexture = new uint8_t[4*totalSizeForTexture];
+	uint8_t* curLightMapTexture = new uint8_t[4*totalSizeForTexture];
+	//floatBitsToInt
+	//uint64_t idx = 0;
+	for (int x = 0; x < size.x; x++)
+		for (int y = 0; y < size.y; y++)
+			for (int z = 0; z < size.z; z++)
+				for (int w = 0; w < size.w; w++)
+				{
+					int FieldIdx = GetIndex(x, y, z, w);
+					int TexIdx = GetTexIndex(x, y, z, w);
+					curMapTexture[TexIdx] = 0; //no block by default
+					curMapTexture[TexIdx + 1] = 0; 
+					curMapTexture[TexIdx + 2] = 0; 
+					curMapTexture[TexIdx + 3] = 0;
+
+					if ((curMap[FieldIdx] & WALL_BLOCK) != 0)
+					{
+						curMapTexture[TexIdx] = 255; // fully solid block
+						curMapTexture[TexIdx + 1] = 10; //regular block type
+					}
+					if ((curMap[FieldIdx] & LIGHT_BLOCK) != 0)
+					{
+						curMapTexture[TexIdx] = 255; // fully solid block
+						curMapTexture[TexIdx + 1] = 255; //light block type
+					}
+
+					Light_t light = curLightMap[FieldIdx];
+					int LightLevelNegX = ((light >> (NEG_X * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelPosX = ((light >> (POS_X * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelNegY = ((light >> (NEG_Y * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelPosY = ((light >> (POS_Y * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelNegZ = ((light >> (NEG_Z * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelPosZ = ((light >> (POS_Z * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelNegW = ((light >> (NEG_W * 4)) & (Texture::LIGHT_GRAD - 1));
+					int LightLevelPosW = ((light >> (POS_W * 4)) & (Texture::LIGHT_GRAD - 1));
+					
+					if (LightLevelPosX > 0)
+						int i = 0;
+					curLightMapTexture[TexIdx + 0] =  LightLevelPosX * 16 + LightLevelNegX;
+					curLightMapTexture[TexIdx + 1] =  LightLevelPosY * 16 + LightLevelNegY;
+					curLightMapTexture[TexIdx + 2] =  LightLevelPosZ * 16 + LightLevelNegZ;
+					curLightMapTexture[TexIdx + 3] =  LightLevelPosW * 16 + LightLevelNegW;
+
+				}
+
+	
+	int idx = GetTexIndex(9,4,4,11);
+	idx = 0;
+	curMapTexture[idx + 0] = 255;
+	curMapTexture[idx + 1] = 10;
+	curMapTexture[idx + 2] = 0;
+	curMapTexture[idx + 3] = 0;
+
+	GLuint newCurMapTextureId;
+	glActiveTexture(GL_TEXTURE0 + 1);
+	glGenTextures(1, &newCurMapTextureId);
+	glBindTexture(GL_TEXTURE_3D, newCurMapTextureId);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_NEAREST GL_LINEAR
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+
+	glUseProgram(shader->ID);
+	GLint curMapId = glGetUniformLocation(shader->ID, "currentMap");
+	glUniform1i(curMapId, 1); // Texture unit 4 is for current map.
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texSizeX, texSizeY, texSizeZ, 0, GL_RGBA, GL_UNSIGNED_BYTE, curMapTexture);
+
+
+	GLuint newCurLightMapTextureId;
+	glActiveTexture(GL_TEXTURE0 + 2);
+	glGenTextures(1, &newCurLightMapTextureId);
+	glBindTexture(GL_TEXTURE_3D, newCurLightMapTextureId);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	GLint curMapLightId = glGetUniformLocation(shader->ID, "currentLightMap");
+	glUseProgram(shader->ID);
+	glUniform1i(curMapLightId, 2); // Texture unit 4 is for current map.
+
+	glActiveTexture(GL_TEXTURE0 + 2);
+	glBindTexture(GL_TEXTURE_3D, newCurLightMapTextureId);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, texSizeX, texSizeY, texSizeZ, 0, GL_RGBA, GL_UNSIGNED_BYTE, curLightMapTexture);
+	
+	delete[] curMapTexture;
+	delete[] curLightMapTexture;
+
+}

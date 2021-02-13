@@ -135,24 +135,30 @@ void Player::RotateAngle(float& axisAngle, glm::vec4& va, glm::vec4& vb, float d
 	AddToAngleDegree(axisAngle, degree);
 }
 
+#define RAY_NO_COLLISION 0
+#define RAY_COLLIDE_BLOCK 1
+#define RAY_COLLIDE_MAP_BORDER 2
+
 void Player::SetNewPos(glm::vec4 v, float delta, int sign)
 {
 	float safeDist;
 	Cell_t collideCell = 0;
 	int res = Raycaster::FindCollision(lastPos, v*(float)sign, delta, safeDist, collideCell, noclip, field);
 
-	if (!noclip || res == 2)
+	//Enable out-of box walking
+	//if (!noclip || res == RAY_COLLIDE_MAP_BORDER)
+	if (!noclip)
 	{
 		safeDist = glm::min(safeDist, delta);
 		pos += v*safeDist*(float)sign;
 	}
-	else
+	else 
 	{
 		pos += v*delta*(float)sign;
 	}
 
 	//glorious victory
-	if (res == 0 && (collideCell & WIN_BLOCK) != 0)
+	if (res == RAY_NO_COLLISION && (collideCell & WIN_BLOCK) != 0)
 	{
 		field->CreateWinRoom();
 		Reset();

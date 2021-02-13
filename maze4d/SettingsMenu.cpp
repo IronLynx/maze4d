@@ -10,6 +10,7 @@ SettingsMenu::SettingsMenu(Game* game, std::string category) : UserInterfaceItem
 	backButton = Button(paramList.begin()->button);
 	backButton.actionCode = UI_ACTION_CLOSE_ITEM;
 	backButton.text = "Back";
+	backButton.helpText = "";
 }
 
 void SettingsMenu::Render(uint8_t* buffer)
@@ -245,7 +246,7 @@ void SettingsMenu::ReloadParams()
 			std::replace(buttonText.begin(), buttonText.end(), '_', ' ');
 			std::transform(buttonText.begin(), ++buttonText.begin(), buttonText.begin(), ::toupper);
 
-			Parameter par = Parameter({ tag, cfgParam, Button({ i++, UI_ACTION_NOTHING, buttonText }) });
+			Parameter par = Parameter({ tag, cfgParam, Button({ i++, UI_ACTION_NOTHING, buttonText, cfgParam.comment }) });
 			paramList.push_back(par);
 		}
 	}

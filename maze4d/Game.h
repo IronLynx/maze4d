@@ -1,13 +1,16 @@
 #pragma once
 
-#include <Utils.h>
-#include <Config.h>
+#include <Field.h>
+
 #include <Player.h>
 #include <PlayerController.h>
 #include <Raycaster.h>
-#include <Field.h>
+
 #include <Renderer.h>
 #include <Cube.h>
+
+#include <Config.h>
+//#include <Utils.h>
 
 class Game
 {
@@ -26,10 +29,11 @@ public:
 			delete renderer;
 	}
 
-	void Init();
+	void Init(Shader* shader);
 	void Render(uint8_t* buffer);
 	void ReinitVideoConfig();
 	bool NeedReconfigureResolution = false;
+	
 
 	void NewGame();
 	void ApplyNewParameters();
@@ -38,10 +42,12 @@ public:
 	int viewHeight;
 	float viewScale;
 	int vsync;
+	int CpuRender;
 
 	Player player;
 	PlayerController* playerController = nullptr;
 
+	Shader* shader = nullptr;
 	Config* cfg = nullptr;
 	Field* field = nullptr; //to get roo
 

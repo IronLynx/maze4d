@@ -1,8 +1,13 @@
 #pragma once
 
-#include <Utils.h>
+
 #include <Field.h>
+//#include <Utils.h>
 #include <Cube.h>
+
+#define RAY_NO_COLLISION 0
+#define RAY_COLLIDE_BLOCK 1
+#define RAY_COLLIDE_MAP_BORDER 2
 
 class Raycaster
 {
@@ -75,7 +80,6 @@ public:
 		Cell_t cell = 0;
 		Light_t light = 0;
 		int index = 0;
-
 		//perform DDA
 		while (true)
 		{
@@ -163,7 +167,7 @@ public:
 			{
 				glm::vec4 tmp2 = glm::vec4(pos + v*(i - step));
 				safeDist = i - step;
-				return 2;
+				return 2; //collision with map border
 			}
 
 			if (!noclip)
@@ -175,14 +179,14 @@ public:
 				if ((cell & WALL_BLOCK) != 0 && (cell & LIGHT_BLOCK) == 0 && (cell & WIN_BLOCK) == 0)
 				{
 					safeDist = i - step;
-					return 1;
+					return 1; //collision with block
 				}
 			}
 
 			if (i > targetDist)
 			{
 				safeDist = targetDist;
-				return 0;
+				return 0; //no collision detected
 			}
 		}
 	}
