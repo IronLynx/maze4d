@@ -11,7 +11,7 @@ Project includes following dependencies:
 
 ## Controls
 ```
- ------------ Movement ------------
+------------ Movement ------------
  Forward (+x): W,   Back (-x): S
  Up      (+y): R,   Down (-y): F
  Right   (+z): D,   Left (-z): A
@@ -24,13 +24,15 @@ Project includes following dependencies:
  YZ (roll):  E,    Q
  YW:         Z,    C
  ZW:         M,    N  (or mouseX + LSHIFT)
+ Align W-angle:    TAB
+ Reset W-angle:    B
 
  ------------ Other ------------
  Reset player:      P
  Noclip:            F8
  Fullscreen:        F11
  Lock/unlock mouse: SPACE or mouse button
- Quit:              ESC
+ Menu:              ESC
 ```
 
 <details><summary>Screenshots</summary>
