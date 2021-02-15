@@ -22,11 +22,6 @@ uniform ivec2 gameResolution; //viewWidth and viewHeight
 
 uniform int CpuRender = 1;
 uniform int AntiAliasingEnabled = 0;
-
-
-
-
-
 const int  EDGES_COUNT = 8;
 
 //regular 4d Cube texture, contains 8 textures of solid 3d cubes

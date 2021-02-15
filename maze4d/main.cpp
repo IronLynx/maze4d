@@ -304,63 +304,7 @@ GLFWwindow* InitGL()
 	return window;
 }
 
-
-
-void InitScene(unsigned int& screenTex, unsigned int& VAO)
-{
-
-	// set up vertex data (and buffer(s)) and configure vertex attributes
-	// ------------------------------------------------------------------
-	float vertices[] = {
-		// positions          // colors           // texture coords
-		1.0f,   1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-		1.0f,  -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-		-1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-		-1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
-	};
-	unsigned int indices[] = {
-		0, 1, 3, // first triangle
-		1, 2, 3  // second triangle
-	};
-	unsigned int VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-
-	// load and create a texture 
-	// -------------------------
-	glGenTextures(1, &screenTex);
-	glBindTexture(GL_TEXTURE_2D, screenTex);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-
-
-uint8_t* InitGame(GLFWwindow* window)
+uint8_t* InitGlWindow(GLFWwindow* window)
 {
 	int texDataSize = game.viewWidth * game.viewHeight * 4;
 	uint8_t* texData = new uint8_t[texDataSize];
@@ -388,34 +332,8 @@ uint8_t* InitGame(GLFWwindow* window)
 }
 
 
-void UpdateShaderVariables(Shader* shader)
+void RenderFrame(double delta, Shader* shader, uint8_t* texData)
 {
-	glUseProgram(shader->ID);
-
-	GLint loc = glGetUniformLocation(shader->ID, "vx");
-	glUniform4f(loc, game.player.vx.x, game.player.vx.y, game.player.vx.z, game.player.vx.w);
-
-	loc = glGetUniformLocation(shader->ID, "vy");
-	glUniform4f(loc, game.player.vy.x, game.player.vy.y, game.player.vy.z, game.player.vy.w);
-
-	loc = glGetUniformLocation(shader->ID, "vz");
-	glUniform4f(loc, game.player.vz.x, game.player.vz.y, game.player.vz.z, game.player.vz.w);
-
-	loc = glGetUniformLocation(shader->ID, "vw");
-	glUniform4f(loc, game.player.vw.x, game.player.vw.y, game.player.vw.z, game.player.vw.w);
-
-	loc = glGetUniformLocation(shader->ID, "pos");
-	glUniform4f(loc, game.player.pos.x, game.player.pos.y, game.player.pos.z, game.player.pos.w);
-
-	loc = glGetUniformLocation(shader->ID, "CpuRender");
-	glUniform1i(loc, game.CpuRender);
-}
-
-
-void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsigned int VAO, Shader* shader, uint8_t* texData)
-{
-	UpdateShaderVariables(shader);
-
 	if (game.NeedReconfigureResolution)
 	{
 		restart = true;
@@ -426,21 +344,7 @@ void RenderFrame(double delta, GLFWwindow* window, unsigned int screenTex, unsig
 	}
 	else
 		mainUi.Render(texData);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	// bind textures on corresponding texture units
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, screenTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, game.viewWidth, game.viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-
-	shader->use();
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
-
-
 
 int main()
 {
@@ -452,16 +356,9 @@ int main()
 		//mainUi = MainUiController(&game);
 
 		GLFWwindow* window = InitGL();
-		uint8_t* texData = InitGame(window);
-
-		unsigned int screenTex;
-		unsigned int VAOgame;
-		Shader* shaderGame = new Shader();
-		shaderGame->LoadFromFiles("VertexShader.hlsl", "FragmentRaycasting4d.hlsl");
-		InitScene(screenTex, VAOgame);
-		game.Init(shaderGame);
-		GLint gameResolutionLoc = glGetUniformLocation(shaderGame->ID, "gameResolution");
-		glUniform2i(gameResolutionLoc, game.viewWidth, game.viewHeight);
+		uint8_t* texData = InitGlWindow(window);
+		
+		game.Init();
 		
 		int nbFrames = 0;
 		double lastTime = glfwGetTime();
@@ -472,7 +369,8 @@ int main()
 		{
 			startFrameTime = glfwGetTime();
 			game.playerController->Update(delta);
-			RenderFrame(delta, window, screenTex, VAOgame, shaderGame, texData);
+			RenderFrame(delta, nullptr, texData);
+
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 
@@ -489,7 +387,6 @@ int main()
 		}
 
 		delete[] texData;
-		delete shaderGame;
 
 		glfwDestroyWindow(window);
 		glfwTerminate();

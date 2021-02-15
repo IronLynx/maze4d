@@ -196,6 +196,7 @@ xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
     <ClInclude Include="..\glad\include\glad\glad.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Cube.h" />
+    <ClInclude Include="GameGraphics.h" />
     <ClInclude Include="Maze.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerController.h" />
