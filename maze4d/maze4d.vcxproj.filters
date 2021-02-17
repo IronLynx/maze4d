@@ -12,6 +12,9 @@
     <Filter Include="Source files\UserInterface">
       <UniqueIdentifier>{56695b09-2e16-4143-91a5-d211a643e6cb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header files\Shaders">
+      <UniqueIdentifier>{cc9357cc-69ea-4852-985b-b3872eea9286}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -59,6 +62,9 @@
     <ClCompile Include="Player.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\glad\include\glad\glad.h">
@@ -103,5 +109,13 @@
     <ClInclude Include="UserInterfaceClasses.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="GameGraphics.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VertexShader.hlsl" />
+    <None Include="FragmentShader.hlsl" />
+    <None Include="FragmentRaycasting4d.hlsl" />
   </ItemGroup>
 </Project>

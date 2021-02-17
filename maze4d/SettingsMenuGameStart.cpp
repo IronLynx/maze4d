@@ -13,6 +13,7 @@ SettingsMenuGameStart::SettingsMenuGameStart(Game* game)
 	backButton = Button(paramList.begin()->button);
 	backButton.actionCode = UI_ACTION_CLOSE_ITEM;
 	backButton.text = "Start";
+	backButton.helpText = "Generate new maze and start the game";
 
 	activeParam = paramList.end();
 	activeAction = UI_ACTION_CLOSE_ITEM;

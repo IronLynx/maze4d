@@ -12,7 +12,7 @@ Project includes following dependencies:
 
 ## Controls
 ```
- ------------ Movement ------------
+------------ Movement ------------
  Forward (+x): W,   Back (-x): S
  Up      (+y): R,   Down (-y): F
  Right   (+z): D,   Left (-z): A

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Utils.h>
+#include <Game.h>
 #include <Config.h>
 #include <Player.h>
-#include <Game.h>
+
 //#include <glad/glad.h> // generated from https://glad.dav1d.de
 
 #include <iomanip>
@@ -74,6 +74,7 @@ struct Button
 	int id;
 	unsigned int actionCode;
 	std::string text;
+	std::string helpText;
 
 	int width;
 	int height;
@@ -103,7 +104,8 @@ public:
 	void RenderRectangle(uint8_t* buffer, int posX, int posY, int width, int height, glm::u8vec3 color);
 
 	void RenderButton(Button button, uint8_t* buffer, int posX, int posY, bool isHovered = false);
-	
+	int FPS = 0;
+
 protected:
 	UserInterfaceItem* newWindow = nullptr;
 	UI_ACTION_CODE activeAction;
