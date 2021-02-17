@@ -1,5 +1,5 @@
 # maze4d
-First person four-dimensional maze game, visualized by 3D cross-sections. The game uses software rendering (CPU-based raycasting), so it has poor performance and can be very slow at high resolutions.
+First person four-dimensional maze game, visualized by 3D cross-sections.
 
 ## Build
 ### Windows
@@ -12,7 +12,7 @@ Project includes following dependencies:
 
 ## Controls
 ```
------------- Movement ------------
+ ------------ Movement ------------
  Forward (+x): W,   Back (-x): S
  Up      (+y): R,   Down (-y): F
  Right   (+z): D,   Left (-z): A
@@ -28,7 +28,7 @@ Project includes following dependencies:
  Align W-angle:    TAB
  Reset W-angle:    B
 
- ------------ Other ------------
+ ------------- Other --------------
  Reset player:      P
  Noclip:            F8
  Fullscreen:        F11
