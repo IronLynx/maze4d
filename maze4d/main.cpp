@@ -390,6 +390,7 @@ int main()
 
 		glfwDestroyWindow(window);
 		glfwTerminate();
+		game.ClearShaders();
 	}
 	return 0;
 }

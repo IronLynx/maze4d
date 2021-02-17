@@ -45,6 +45,15 @@ public:
 	void DrawScene(uint8_t* buffer);
 	void ReinitVideoConfig();
 	bool NeedReconfigureResolution = false;
+	void ClearShaders()
+	{
+		if (shaderGame != nullptr)
+			delete shaderGame;
+		if (shaderUi != nullptr)
+			delete shaderUi;
+		shaderGame = nullptr;
+		shaderUi = nullptr;
+	}
 	
 
 	void NewGame();
