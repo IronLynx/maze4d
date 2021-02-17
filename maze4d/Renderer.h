@@ -29,7 +29,7 @@ public:
 		buffer[index * 4    ] = pixel.x;
 		buffer[index * 4 + 1] = pixel.y;
 		buffer[index * 4 + 2] = pixel.z;
-		buffer[index * 4 + 3] = 0;
+		buffer[index * 4 + 3] = 255;
 	}
 
 

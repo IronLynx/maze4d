@@ -16,7 +16,7 @@ void MainUiController::Render(uint8_t* buffer)
 	if (game->CpuRender == 0)
 		memset(buffer, 0, game->viewWidth * game->viewHeight * 4);
 
-	if (game->CpuRender > 0 && (reRenderBackground || openedUiList.empty()))
+	if (reRenderBackground || openedUiList.empty())
 	{
 		game->Render(buffer);
 		reRenderBackground = false;
@@ -29,6 +29,8 @@ void MainUiController::Render(uint8_t* buffer)
 		if (game->cfg->GetBool("display_coords"))
 			this->RenderPlayerinfo(&game->player, buffer);
 	}
+
+	game->DrawScene(buffer);
 }
 
 void MainUiController::NextMenuItem() 

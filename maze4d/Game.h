@@ -1,5 +1,6 @@
 #pragma once
 
+#include <GameGraphics.h>
 #include <Field.h>
 
 #include <Player.h>
@@ -27,12 +28,32 @@ public:
 			delete cfg;
 		if (renderer != nullptr)
 			delete renderer;
+		if (mainScene != nullptr)
+			delete mainScene;
+		if (helperScene1 != nullptr)
+			delete helperScene1;
+		if (helperScene2 != nullptr)
+			delete helperScene2;
+		if (shaderGame != nullptr)
+			delete shaderGame;
+		if (shaderUi != nullptr)
+			delete shaderUi;
 	}
 
-	void Init(Shader* shader);
+	void Init();
 	void Render(uint8_t* buffer);
+	void DrawScene(uint8_t* buffer);
 	void ReinitVideoConfig();
 	bool NeedReconfigureResolution = false;
+	void ClearShaders()
+	{
+		if (shaderGame != nullptr)
+			delete shaderGame;
+		if (shaderUi != nullptr)
+			delete shaderUi;
+		shaderGame = nullptr;
+		shaderUi = nullptr;
+	}
 	
 
 	void NewGame();
@@ -47,11 +68,18 @@ public:
 	Player player;
 	PlayerController* playerController = nullptr;
 
-	Shader* shader = nullptr;
+	
 	Config* cfg = nullptr;
 	Field* field = nullptr; //to get roo
 
 private:
 	Raycaster raycaster;
 	Renderer* renderer = nullptr;
+	GameGraphics* mainScene = nullptr;
+	GameGraphics* UserInterface = nullptr;
+	GameGraphics* helperScene1 = nullptr;
+	GameGraphics* helperScene2 = nullptr;
+	Shader* shaderGame = nullptr;
+	Shader* shaderUi = nullptr;
+	void UpdateShaderPlayer(Player curPlayer);
 };
