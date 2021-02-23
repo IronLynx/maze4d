@@ -162,7 +162,7 @@ protected:
 	std::string ParamTextForDisplay(float value, CFG_VALUE_TYPE valueType);
 
 	void ReloadParams();
-	void SettingsMenu::SwitchEditMode();
+	void SwitchEditMode();
 	void RecalculateButtonWidth();
 };
 
