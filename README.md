@@ -1,6 +1,8 @@
 # maze4d
 First person four-dimensional maze game, visualized by 3D cross-sections.
 
+[![CI Linux](https://github.com/IronLynx/maze4d/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/IronLynx/maze4d/actions/workflows/ci-linux.yml)
+
 ## Build
 ### Windows
 Just clone the repository, and build `maze4d.sln` in Visual Studio 2015.
