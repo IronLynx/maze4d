@@ -1,0 +1,20 @@
+name: CI Linux
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+
+    steps:
+    - run: sudo apt install build-essential cmake ninja-build libglfw3-dev libglm-dev libfreetype-dev libfreetype6 libfreetype6-dev
+
+    - uses: actions/checkout@v2
+
+    - run: mkdir builddir
+    - run: cmake ..
+      working-directory: ./builddir
+    - run: make
+      working-directory: ./builddir
