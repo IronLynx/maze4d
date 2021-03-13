@@ -9,8 +9,9 @@ MainMenu::MainMenu(Game* game) : UserInterfaceItem(game)
 	buttonList = std::list<Button>();
 
 	buttonList.push_back(Button({ i++, UI_ACTION_CLOSE_ITEM, "Continue", "Back to the game" }));
-	buttonList.push_back(Button({ i++, UI_ACTION_RESTART, "Restart", "Restart application and reload all" }));
+	//buttonList.push_back(Button({ i++, UI_ACTION_RESTART, "Restart", "Restart application and reload all" }));
 	buttonList.push_back(Button({ i++, UI_ACTION_NEWGAME,"New game", "Generate new maze and start new game" }));
+	buttonList.push_back(Button({ i++, UI_ACTION_NEWEDITOR, "New editor", "Create empty box with enabled free for all editor tools" }));
 	buttonList.push_back(Button({ i++, UI_ACTION_HOTKEYS,"Hotkeys", "List of hotkeys that can be used during the game" }));
 	buttonList.push_back(Button({ i++, UI_ACTION_SETTINGS,"Settings", "Adjustable parameters" }));
 	buttonList.push_back(Button({ i++, UI_ACTION_EXIT, "Quit", "Close application and exist the game" }));
@@ -46,7 +47,7 @@ void MainMenu::Render(uint8_t* buffer)
 	for (it = buttonList.begin(); it != buttonList.end(); ++it)
 	{
 		//it->Render(buffer, xPosition, yPosition - yDelta, buttonWidth,buttonHeight, &*it == &*activeButton);
-		RenderButton(*it, buffer, xPosition, yPosition - yDelta, &*it == &*activeButton);
+		RenderButton(*it, xPosition, yPosition - yDelta, &*it == &*activeButton);
 		yPosition = yPosition - it->height - yDelta;
 	}
 	
@@ -63,6 +64,10 @@ UI_ACTION_CODE MainMenu::OnSelect()
 		break;
 	case UI_ACTION_NEWGAME:
 		newWindow = new SettingsMenuGameStart(game);
+		return UI_ACTION_OPEN_NEW_CLOSE_OLD;
+		break;
+	case UI_ACTION_NEWEDITOR:
+		newWindow = new SettingsMenuEditorStart(game);
 		return UI_ACTION_OPEN_NEW_CLOSE_OLD;
 		break;
 	case UI_ACTION_HOTKEYS:

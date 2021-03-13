@@ -1,5 +1,6 @@
 #pragma once
 
+#include <shader.h>
 #include <Game.h>
 #include <Config.h>
 #include <Player.h>
@@ -10,6 +11,7 @@
 #include <sstream>
 
 #include <ft2build.h>
+#include <freetype/ftbitmap.h>
 #include <list>
 #include <stack> 
 
@@ -40,6 +42,7 @@ typedef unsigned int UI_ACTION_CODE;
 #define UI_ACTION_SETTINGS 7
 #define UI_ACTION_OPEN_NEW_ITEM 8
 #define UI_ACTION_OPEN_NEW_CLOSE_OLD 9
+#define UI_ACTION_NEWEDITOR 10
 
 static std::string float2str(float value, unsigned int decimals = 2, unsigned int alignLength = 1)
 {
@@ -100,16 +103,32 @@ public:
 	virtual void NextMenuItem() {}
 	virtual void PreviousMenuItem() {}
 
-	void RenderUItext(std::string text, int fontSize, uint8_t* buffer, int posX = 20, int posY = 30, glm::u8vec3 color = glm::u8vec3(255, 255, 255));
-	void RenderRectangle(uint8_t* buffer, int posX, int posY, int width, int height, glm::u8vec3 color);
+	//void RenderUItext(std::string text, int fontSize, uint8_t* buffer, int posX = 20, int posY = 30, glm::u8vec3 color = glm::u8vec3(255, 255, 255));
+	//void RenderRectangle(uint8_t* buffer, int posX, int posY, int width, int height, glm::u8vec3 color);
 
-	void RenderButton(Button button, uint8_t* buffer, int posX, int posY, bool isHovered = false);
+	void RenderRectangle(int posX, int posY, int width, int height, glm::u8vec3 color);
+	void RenderUItext(std::string text, int fontSize, int posX = 20, int posY = 30, glm::u8vec3 color = glm::u8vec3(255, 255, 255));
+
+	void RenderButton(Button button, int posX, int posY, bool isHovered = false);
 	int FPS = 0;
+
+	static void InitGL();
+	static void ClearShaders()
+	{
+		if (shader != nullptr)
+			delete shader;
+		shader = nullptr;
+		if (graphics != nullptr)
+			delete graphics;
+		graphics = nullptr;
+	}
 
 protected:
 	UserInterfaceItem* newWindow = nullptr;
 	UI_ACTION_CODE activeAction;
 	Game* game = nullptr;
+	static Shader* shader;
+	static GameGraphics* graphics;
 };
 
 class HotKeysMenu : public UserInterfaceItem
@@ -125,7 +144,7 @@ public:
 class SettingsMenu : public UserInterfaceItem
 {
 public:
-	SettingsMenu() {}
+	SettingsMenu() : UserInterfaceItem() {}
 	SettingsMenu(Game* game, std::string category = "");
 
 	virtual void Render(uint8_t* buffer);
@@ -174,12 +193,20 @@ public:
 	virtual UI_ACTION_CODE OnSelect();
 };
 
+class SettingsMenuEditorStart : public SettingsMenu
+{
+public:
+	SettingsMenuEditorStart(Game* game);
+	virtual UI_ACTION_CODE OnCancel();
+	virtual UI_ACTION_CODE OnSelect();
+};
+
 
 class MainMenu : public UserInterfaceItem
 {
 public:
-	MainMenu() {}
-	MainMenu(Game* game);
+	MainMenu() : UserInterfaceItem() {}
+	MainMenu(Game* game) ;
 
 	void RecalculateButtonWidth();
 
@@ -217,12 +244,12 @@ public:
 	
 	bool reRenderBackground = true;
 	bool isMenu = true;
-
+	void RenderPlayerinfo(Player* player, uint8_t* buffer);
 private:	
 	Game* game;
 	std::stack<UserInterfaceItem*> openedUiList;
 	void ExitMenu() { isMenu = false; }
-	void RenderPlayerinfo(Player* player, uint8_t* buffer);
+	
 };
 
 

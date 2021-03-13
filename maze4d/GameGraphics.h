@@ -2,7 +2,6 @@
 
 #include <glad/glad.h>
 #include <shader.h>
-#include <Player.h>
 
 class GameGraphics
 {
@@ -14,6 +13,16 @@ public:
 		InitScene(bottomX, bottomY, width, height);
 	}
 
+	~GameGraphics()
+	{
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteTextures(1, &screenTex);
+		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &EBO);
+		if (selfShader)
+			glDeleteShader(shader->ID);
+	}
+
 	void InitScene(float bottomX, float bottomY, float width, float height)
 	{
 		glEnable(GL_BLEND);
@@ -23,16 +32,17 @@ public:
 		// ------------------------------------------------------------------
 		float vertices[] = {
 			// positions          // colors           // texture coords
-			bottomX + width,   bottomY + height, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-			bottomX + width,   bottomY,	         0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-			bottomX,           bottomY,			 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-			bottomX,		   bottomY + height, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+			bottomX,		   bottomY + height, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f, //4 top left 
+			bottomX,           bottomY,			 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, //3 bottom left
+			bottomX + width,   bottomY,	         0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, //2 bottom right
+			bottomX + width,   bottomY + height, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f  //1 top right
 		};
+
 		unsigned int indices[] = {
 			0, 1, 3, // first triangle
 			1, 2, 3  // second triangle
 		};
-		unsigned int VBO, EBO;
+		
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		glGenBuffers(1, &EBO);
@@ -67,21 +77,88 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
-	void Draw(uint8_t* CpuTexData, int viewWidth, int viewHeight)
+	void Draw(glm::u8vec3 colorRGB)
+	{
+		glm::u8vec4 colorRGBA = glm::u8vec4(colorRGB.x, colorRGB.y, colorRGB.z, 255);
+		Draw(colorRGBA);
+	}
+
+	void SetNewPosition(float bottomX, float bottomY, float width, float height)
+	{
+		float vertices[] = {
+			// positions          // colors           // texture coords
+			bottomX,		   bottomY + height, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f, //4 top left 
+			bottomX,           bottomY,			 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, //3 bottom left
+			bottomX + width,   bottomY,	         0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, //2 bottom right
+			bottomX + width,   bottomY + height, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f  //1 top right
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	}
+
+	void Draw(uint8_t R, uint8_t G, uint8_t B, uint8_t Alpha = 255)
+	{
+		Draw(glm::u8vec4(R, G, B, Alpha));
+	}
+
+	void Draw(glm::u8vec4 colorRGBA = glm::u8vec4(255, 100, 100,0))
+	{
+		uint8_t* onePixelBuffer = new uint8_t[4];
+		memset(onePixelBuffer, 0, 4);
+		onePixelBuffer[0] = colorRGBA.x;
+		onePixelBuffer[1] = colorRGBA.y;
+		onePixelBuffer[2] = colorRGBA.z;
+		onePixelBuffer[3] = colorRGBA.w;
+
+		Draw(onePixelBuffer, 1, 1);
+
+		delete[] onePixelBuffer;
+		
+	}
+
+	//texture should be in RGBA buffer
+	void Draw(uint8_t* textureData, int textureWidth, int textureHeight, GLint internalFormat = GL_RGBA)
 	{
 		// bind textures on corresponding texture units
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, screenTex);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewWidth, viewHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, CpuTexData);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, textureWidth, textureHeight, 0, internalFormat, GL_UNSIGNED_BYTE, textureData);
 
 		shader->use();
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	}
 
+	void InitSelfShader()
+	{
+		if (selfShader)
+			glDeleteShader(shader->ID);
+
+		shader = new Shader();
+		shader->LoadFromFiles("VertexShader.hlsl", "FragmentShader.hlsl");
+
+		selfShader = true;
+	}
+
+	void InitRemoteShader(Shader* remoteShader)
+	{
+		if (selfShader)
+		{
+			glDeleteShader(shader->ID);
+			delete shader;
+			
+		}
+		this->shader = remoteShader;
+		selfShader = false;
+	}
+
+
 private:
 	unsigned int screenTex;
-	unsigned int VAO;
+	unsigned int VAO, VBO, EBO;
 	Shader* shader = nullptr;
+	bool selfShader = false;
 
 };

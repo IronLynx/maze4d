@@ -10,41 +10,10 @@ Game::Game()
 	viewHeight = glm::abs(cfg->GetInt("height"));
 	viewScale = glm::abs(cfg->GetFloat("window_scale"));
 	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
-	CpuRender = cfg->GetInt("cpu_render");
 }
 
 void Game::Init()
 {
-	if (shaderGame == nullptr)
-	{
-		shaderGame = new Shader();
-		shaderGame->LoadFromFiles("VertexShader.hlsl", "FragmentRaycasting4d.hlsl");
-	}
-
-	if (shaderUi == nullptr)
-	{
-		shaderUi = new Shader();
-		shaderUi->LoadFromFiles("VertexShader.hlsl", "FragmentShader.hlsl");
-	}
-	
-
-	glUseProgram(shaderGame->ID);
-
-	GLint loc = glGetUniformLocation(shaderGame->ID, "gameResolution");
-	glUniform2i(loc, viewWidth, viewHeight);
-
-	int AntiAliasingEnabled = cfg->GetInt("anti_aliasing");
-	loc = glGetUniformLocation(shaderGame->ID, "AntiAliasingEnabled");
-	glUniform1i(loc, AntiAliasingEnabled);
-
-	CpuRender = cfg->GetInt("cpu_render");
-	loc = glGetUniformLocation(shaderGame->ID, "CpuRender");
-	glUniform1i(loc, CpuRender);
-
-	Texture::TEX_SIZE = cfg->GetInt("cube_pixels");
-	Texture::BORDER_SIZE = cfg->GetInt("border_pixels");
-	Texture::TEX_SMOOTHERING_FLAG = cfg->GetBool("texture_smoothering");
-
 	glm::ivec4 mazeSize = glm::ivec4(
 		glm::max(glm::abs(cfg->GetInt("maze_size_x")), 1),
 		glm::max(glm::abs(cfg->GetInt("maze_size_y")), 1),
@@ -55,32 +24,23 @@ void Game::Init()
 	Maze maze(mazeSize);
 	maze.Generate();
 
-	field = new Field(glm::ivec4(
+	MazeField* mazeField = new MazeField();
+	mazeField->GenerateMaze(mazeSize);
+	glm::ivec4 fieldSize = glm::ivec4(
 		mazeSize.x * mazeRoomSize + 1, // +1 - map positive borders
 		mazeSize.y * mazeRoomSize + 1,
 		mazeSize.z * mazeRoomSize + 1,
-		mazeSize.w * mazeRoomSize + 1),
-		glm::abs(cfg->GetInt("light_dist")),
-		mazeRoomSize);
+		mazeSize.w * mazeRoomSize + 1);
+	mazeField->GenerateField(fieldSize, glm::abs(cfg->GetInt("light_dist")), mazeRoomSize, cfg);
 
-	field->Init(&maze, shaderGame);
+	field = mazeField->field;
+	field->Init(this->cfg, -1, -1, 2, 2);
 
-	Cube::Init(shaderGame);
-
+	player.defaultPos = glm::vec4(mazeRoomSize / 2.0f + 0.2f);
 	player.Init(field, cfg->GetBool("ground_rotation"));
-
-	renderer = new Renderer(&player, field, &raycaster, cfg->GetInt("multithreading") != 0, cfg->GetInt("skip_pixels") != 0);
-
-	raycaster.Init(field);
-
-	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player);
-
-	mainScene = new GameGraphics(shaderGame, -1.0f, -1.0f, 2.0f, 2.0f);
-	UserInterface = new GameGraphics(shaderUi, -1.0f, -1.0f, 2.0f, 2.0f);
-	helperScene1 = new GameGraphics(shaderGame, 0.6f, 0.55f, 0.35f, 0.35f);
-	helperScene2 = new GameGraphics(shaderGame, 0.6f, 0.15f, 0.35f, 0.35f);
-
-
+	
+	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player, field);
+//	raycaster.Init(field);	
 }
 
 void Game::ReinitVideoConfig()
@@ -89,38 +49,21 @@ void Game::ReinitVideoConfig()
 	viewHeight = glm::abs(cfg->GetInt("height"));
 	viewScale = glm::abs(cfg->GetFloat("window_scale"));
 	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
-	
+	glfwSwapInterval(vsync);
 }
 
 void Game::ApplyNewParameters()
 {
-	if (Texture::TEX_SIZE != cfg->GetInt("cube_pixels") ||
-		Texture::BORDER_SIZE != cfg->GetInt("border_pixels") ||
-		Texture::TEX_SMOOTHERING_FLAG != cfg->GetBool("texture_smoothering"))
-	{
-		Texture::TEX_SIZE = cfg->GetInt("cube_pixels");
-		Texture::BORDER_SIZE = cfg->GetInt("border_pixels");
-		Texture::TEX_SMOOTHERING_FLAG = cfg->GetBool("texture_smoothering");
-
-		Cube::Init(shaderGame);
-	}
 
 	if (playerController != nullptr)
 		delete playerController;
-	if (renderer != nullptr)
-		delete renderer;
-
-	//cfg = new Config();
-	renderer = new Renderer(&player, field, &raycaster, cfg->GetInt("multithreading") != 0, cfg->GetInt("skip_pixels") != 0);
-	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player);
+	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player, field);
 	player.groundRotation = cfg->GetBool("ground_rotation");
-
 
 	Random::GetInstance()->Init(cfg->GetInt("seed"));
 
-	viewScale = glm::abs(cfg->GetFloat("window_scale"));
 	vsync = cfg->GetInt("vsync") != 0 ? 1 : 0;
-	
+	glfwSwapInterval(vsync);
 	
 	int newViewWidth = glm::abs(cfg->GetInt("width"));
 	int newViewHeight = glm::abs(cfg->GetInt("height"));
@@ -128,16 +71,7 @@ void Game::ApplyNewParameters()
 	if (newViewHeight != viewHeight || newViewWidth != viewWidth)
 		NeedReconfigureResolution = true;
 
-	glUseProgram(shaderGame->ID);
-
-	int AntiAliasingEnabled = cfg->GetInt("anti_aliasing");
-	GLuint loc = glGetUniformLocation(shaderGame->ID, "AntiAliasingEnabled");
-	glUniform1i(loc, AntiAliasingEnabled);
-
-	CpuRender = cfg->GetInt("cpu_render");
-	loc = glGetUniformLocation(shaderGame->ID, "CpuRender");
-	glUniform1i(loc, CpuRender);
-
+	field->ReadConfig(cfg);
 }
 
 void Game::NewGame()
@@ -146,62 +80,64 @@ void Game::NewGame()
 		delete playerController;
 	if (field != nullptr)
 		delete field;
-	if (renderer != nullptr)
-		delete renderer;
 
 	Init();	
 }
 
+void Game::NewEditor()
+{
+	if (playerController != nullptr)
+		delete playerController;
+	if (field != nullptr)
+		delete field;
+
+	int roomSize = glm::max(glm::abs(cfg->GetInt("editor_room_size")), 2);
+	roomSize++; //+1 positive borders
+	glm::ivec4 fieldSize = glm::ivec4(roomSize, roomSize, roomSize, roomSize);
+	int lightDist = glm::abs(cfg->GetInt("editor_light_dist"));
+
+
+	field = new Field(fieldSize, lightDist, this->cfg);
+	field->Init(this->cfg, -1, -1, 2, 2);
+
+	player.defaultPos = glm::vec4(roomSize / 2.0f + 0.2f);
+	player.Init(field, cfg->GetBool("ground_rotation"));
+
+	playerController = new PlayerController(cfg->GetFloat("speed"), cfg->GetFloat("mouse_sens"), &player, field);
+	//	raycaster.Init(field);	
+}
+
 void Game::UpdateShaderPlayer(Player curPlayer)
 {
-	glUseProgram(shaderGame->ID);
-
-	GLint loc = glGetUniformLocation(shaderGame->ID, "vx");
-	glUniform4f(loc, curPlayer.vx.x, curPlayer.vx.y, curPlayer.vx.z, curPlayer.vx.w);
-
-	loc = glGetUniformLocation(shaderGame->ID, "vy");
-	glUniform4f(loc, curPlayer.vy.x, curPlayer.vy.y, curPlayer.vy.z, curPlayer.vy.w);
-
-	loc = glGetUniformLocation(shaderGame->ID, "vz");
-	glUniform4f(loc, curPlayer.vz.x, curPlayer.vz.y, curPlayer.vz.z, curPlayer.vz.w);
-
-	loc = glGetUniformLocation(shaderGame->ID, "vw");
-	glUniform4f(loc, curPlayer.vw.x, curPlayer.vw.y, curPlayer.vw.z, curPlayer.vw.w);
-
-	loc = glGetUniformLocation(shaderGame->ID, "pos");
-	glUniform4f(loc, curPlayer.pos.x, curPlayer.pos.y, curPlayer.pos.z, curPlayer.pos.w);
+	field->SetCameraView(&curPlayer);
 }
 
-void Game::Render(uint8_t* buffer)
-{
-	if (CpuRender > 0)
-		renderer->FillTexData(buffer, viewWidth, viewHeight);
-}
 
-void Game::DrawScene(uint8_t* buffer)
+void Game::Draw()
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	UpdateShaderPlayer(player);
-	mainScene->Draw(buffer, viewWidth, viewHeight);
+	
+	field->SetFrameSize(- 1, -1, 2, 2);
+	field->SetCameraView(&player);
+	field->Draw();
+	//mainScene->Draw(emptyBuffer,1,1);
+
 
 	if (cfg->GetBool("show_w-rearviews"))
 	{
-		//create empty texture with 1 transparent pixel
-		uint8_t* emptyBuffer = new uint8_t[4];
-		memset(emptyBuffer, 0, 4);
-
 		Player wPlayer1 = player;
 		wPlayer1.RotateZW(90);
-		UpdateShaderPlayer(wPlayer1);
-		helperScene1->Draw(emptyBuffer, 1, 1);
+		field->SetFrameSize(0.6f, 0.55f, 0.35f, 0.35f);
+		field->SetCameraView(&wPlayer1);
+		field->Draw();
+		//helperScene1->Draw(emptyBuffer, 1, 1);
 
 		Player wPlayer2 = player;
 		wPlayer2.RotateYW(90);
-		UpdateShaderPlayer(wPlayer2);
-		helperScene2->Draw(emptyBuffer, 1, 1);
+		field->SetFrameSize(0.6f, 0.15f, 0.35f, 0.35f);
+		field->SetCameraView(&wPlayer2);
+		field->Draw();		
+		//helperScene2->Draw(emptyBuffer, 1, 1);
 	}
 
-	UserInterface->Draw(buffer, viewWidth, viewHeight);
 }

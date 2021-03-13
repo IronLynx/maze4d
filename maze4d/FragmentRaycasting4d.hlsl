@@ -20,14 +20,15 @@ uniform ivec3 MapTexSize;
 uniform ivec4 mapSize;
 uniform ivec2 gameResolution; //viewWidth and viewHeight
 
-uniform int CpuRender = 1;
+uniform int CpuRender = 0;
 uniform int AntiAliasingEnabled = 0;
 const int  EDGES_COUNT = 8;
 
 //regular 4d Cube texture, contains 8 textures of solid 3d cubes
 uniform sampler3D edge3dCube[8]; //Textures50-57
+uniform float texturesPerCube = 1.0f; //tiles texture times per cube
 
-uniform sampler3D light3dCube; //texture of the light cube 
+uniform sampler3D light3dCube; //Texture59 of the light cube 
 
 //4d cube edge numbering convention
 const int  NEG_X = 0; const int  POS_X = 1;
@@ -44,6 +45,10 @@ uniform vec4 vw = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 //player position
 uniform vec4 pos = vec4(4.2f, 4.2f, 4.2f, 4.2f);
+
+uniform vec4 backgroundColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+uniform int maxRenderDistance = -1;
 
 ivec3 Convert4dIdxTo3dIdx(ivec4 Idx4)
 {
@@ -192,6 +197,9 @@ vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int b
 		texPoint = (pos + v*dist).xyz - map.xyz;
 	}
 
+	
+	texPoint = texPoint * texturesPerCube;
+
 	vec4 CubePixel;
 	//regular block type
 	if (blockType == 10)
@@ -200,9 +208,10 @@ vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int b
 		CubePixel = ApplyLight(CubePixel, lightLevel);
 	}
 	//light block type
-	else
+	else if (blockType == 255)
 	{
 		CubePixel = texture(light3dCube, texPoint);
+		//CubePixel.w = 245;
 	}
 
 	return CubePixel;
@@ -223,12 +232,15 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 
 	int edge = 0;
 	int outRangeDistance = 0;
-	int outRangeMaxDistance = mapSize.x + mapSize.y + mapSize.z + mapSize.w;
+	int outRangeMaxDistance = mapSize.x + mapSize.y + mapSize.z + mapSize.w+5;
+	if (maxRenderDistance != -1)		
+		outRangeDistance = maxRenderDistance;
 
 	int blockType = 0;
 
 	int prevEdge = -1;
 	int prevBlockType = -1;
+	float prevAlpha = 0.0f;
 	float lightLevel = 0.0f;
 	float prevLightLevel = 0.0f;
 
@@ -237,6 +249,7 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 	{
 		vec4 hitPixel = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		blockType = 0;
+		bool shouldBreak = false;
 
 		//jump to next map square, OR in x-direction, OR in y-direction
 		if (sideDist.x <= sideDist.y && sideDist.x <= sideDist.z && sideDist.x <= sideDist.w)
@@ -269,10 +282,16 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 		{
 			outRangeDistance = outRangeDistance + 1;
 			if (prevBlockType > 0)
+			{
 				hitPixel = GetPixelFromTexture(map, v, edge, step, prevBlockType);
+				hitPixel.w = prevAlpha;
+			}
 
 			if (outRangeDistance > outRangeMaxDistance)
-				hitPixel = vec4(1.0f, 1.0f, 1.0f, 1.0f); //alpha = 1.0f
+			{
+				hitPixel = backgroundColor; 
+				shouldBreak = true;
+			}
 		}
 		else
 		{
@@ -283,14 +302,21 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 			blockType = int(cell.y * 255.0f);
 			//Check if ray has hit a wall
 			if (blockType > 0)
+			{
 				hitPixel = GetPixelFromTexture(map, v, edge, step, blockType, lightLevel);
+				hitPixel.w = cell.x * hitPixel.w;
+			}
 			else if (prevBlockType > 0)
+			{
 				hitPixel = GetPixelFromTexture(map, v, edge, step, prevBlockType, prevLightLevel);
+				hitPixel.w = prevAlpha;
+			}
 		}
 
 		prevEdge = edge;
 		prevBlockType = blockType;
 		prevLightLevel = lightLevel;
+		prevAlpha = cell.x;
 
 		float Alpha = CubePixel.w;
 		if (hitPixel.w > 0.0f)
@@ -298,6 +324,9 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 
 		CubePixel.w = 1 - (1 - Alpha)* (1 - hitPixel.w);
 		if (CubePixel.w >= 0.99f)
+			break;
+
+		if (shouldBreak)
 			break;
 	}
 
@@ -328,10 +357,13 @@ vec2[9] GetOffsets(int multiplicator)
 		vec2(offsetX, -offsetY)   // bottom-right    		
 		);
 
+
+	//replace firts 4 values with x4 offsets
 	if (multiplicator == 2)
 	{
 		offsetX = pixelWidth / 4.0f;
 		offsetY = pixelHeight / 4.0f;
+
 		offsets[0] = vec2(-offsetX, -offsetY);
 		offsets[1] = vec2(-offsetX,  offsetY);
 		offsets[2] = vec2( offsetX, -offsetY);
@@ -343,25 +375,6 @@ vec2[9] GetOffsets(int multiplicator)
 
 void main()
 {	
-
-
-	if (CpuRender == 1)
-	{
-		FragColor = texture(texture1, TexCoord);
-		return;
-	}
-
-
-	float pixelWidth = 1.0f / gameResolution.x;
-	if (CpuRender == 2 && TexCoord.x >= 0.5f - pixelWidth)
-	{
-		if (TexCoord.x <= 0.5f + pixelWidth)
-			FragColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-		else
-			FragColor = texture(texture1, TexCoord);
-		return;
-	}
-
 	
 	//Anti-aliasing x1, x 4 or x9
 	int AliasMulitplicator = AntiAliasingEnabled + 1;
@@ -372,12 +385,22 @@ void main()
 	vec2 offsets[9] = GetOffsets(AliasMulitplicator);
 	vec4 AntialiasedPixel = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 	int maxSamples = AliasMulitplicator * AliasMulitplicator;
+	float resultingAlpha = 0.0f;
 	for (int i = 0; i < maxSamples; i++)
 	{
 		vec4 vSampleRay = GetRaycastVector(TexCoord + offsets[i]); //based on x,y screen position
 		samplePixel[i] = GetRaycastPixel(vSampleRay);
-		AntialiasedPixel += samplePixel[i] / float(maxSamples);
+		resultingAlpha += samplePixel[i].w / maxSamples; //anti-aliasing for transparent pixels
 	}
+
+	for (int i = 0; i < maxSamples; i++)
+	{
+		float pixelWight = samplePixel[i].w / ( resultingAlpha * float(maxSamples) );
+		AntialiasedPixel += pixelWight * samplePixel[i]  ;
+	}
+
+	AntialiasedPixel.w = resultingAlpha;
+
 	vec4 GamePixel = AntialiasedPixel;
 
 	//overlay user interface texture on top of game frame

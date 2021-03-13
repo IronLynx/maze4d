@@ -21,6 +21,11 @@ public:
 		GenerateShader(vertexCode, fragmentCode);		
 	}
 
+	~Shader()
+	{
+		glDeleteShader(ID);
+	}
+
 	void GenerateShader(const char* vertexCode, const char* fragmentCode)
 	{
 		// 1. compile shaders

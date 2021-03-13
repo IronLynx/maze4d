@@ -1,11 +1,6 @@
 #include <Player.h>
 
-#include <fstream>
-#include <sstream>
-#include <iomanip> 
-#include <math.h>
-#include <set>
-#include <Utils.h>
+
 
 void Player::Init(Field* field, bool groundRotation)
 {
@@ -19,6 +14,7 @@ void Player::Init(Field* field, bool groundRotation)
 void Player::Reset()
 {
 	ResetBasis();
+	basisMatrix.Reset();
 
 	//player orientation
 	angleXY = 0.0f; //-90f - 90f acceptable values, this is up-down rotation angle
@@ -28,18 +24,15 @@ void Player::Reset()
 	angleZW = 0.0f;
 	angleYW = 0.0f;
 
-	pos = glm::vec4(field->roomSize / 2.0f + 0.2f);
-	lastPos = pos;
+	pos = defaultPos; //glm::vec4(2.0f / 2.0f + 0.2f);
+	
 
 	SetCurrentRotation();
 }
 
 void Player::ResetBasis()
 {
-	vx_basis = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-	vy_basis = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
-	vz_basis = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-	vw_basis = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	basisMatrix.Reset();
 
 	ResetToBasis();
 
@@ -52,46 +45,14 @@ void Player::ResetBasis()
 	SetCurrentRotation();
 }
 
-void Player::Rotate(float a, glm::vec4& va, glm::vec4& vb)
-{
-	float c = cosd(a);
-	float s = sind(a);
-	glm::vec4 va1 = va * c;
-	glm::vec4 vb1 = vb * s;
-
-	float c2 = cosd(a + 90.0f);
-	float s2 = sind(a + 90.0f);
-	glm::vec4 va2 = va * c2;
-	glm::vec4 vb2 = vb * s2;
-
-	va = glm::normalize(va1 + vb1);
-	vb = glm::normalize(va2 + vb2);
-
-	float errorAngle = 90.0f - angleBetweenVecs(va, vb);
-	if (abs(errorAngle) > 0.001)
-	{
-		float c3 = cosd(errorAngle + 90.0f);
-		float s3 = sind(errorAngle + 90.0f);
-		glm::vec4 va3 = va * c3;
-		glm::vec4 vb3 = vb * s3;
-		vb = glm::normalize(va3 + vb3);
-	}
-}
-
 void Player::ResetToBasis()
 {
-	vx = vx_basis;
-	vy = vy_basis;
-	vz = vz_basis;
-	vw = vw_basis;
+	rotationMatrix = basisMatrix;
 }
 
 void Player::RebaseToCurrent()
 {
-	vx_basis = vx;
-	vy_basis = vy;
-	vz_basis = vz;
-	vw_basis = vw;
+	basisMatrix = rotationMatrix;
 }
 
 void Player::SetCurrentRotation()
@@ -105,8 +66,8 @@ void Player::SetCurrentRotation()
 		angleXY = std::min(90.0f, angleXY);
 
 		//Prioritized rotation inside current 3d-slice	
-		Rotate(angleXZ, vx, vz); //MouseX, rotate left and right			
-		Rotate(angleXY, vx, vy); //MouseY, up and down rotation
+		rotationMatrix.RotateXZ(angleXZ);
+		rotationMatrix.RotateXY(angleXY);
 	}
 }
 
@@ -115,77 +76,123 @@ void Player::AlignRotation()
 	if (!groundRotation)
 		RebaseToCurrent();
 
-	RoundBasisAngles();
+	basisMatrix.RoundAngles();
 	ResetToBasis();
 
 	//Just for interface visualization
 	//No logic bound to these W-angles
-	angleXW = 90.0f * vw_basis.x;
-	angleYW = 90.0f * vw_basis.y;
-	angleZW = 90.0f * vw_basis.z;
+	angleXW = 90.0f * basisMatrix.vw.x;
+	angleYW = 90.0f * basisMatrix.vw.y;
+	angleZW = 90.0f * basisMatrix.vw.z;
 
 	angleYZ = round(angleYZ / 90.0f) * 90.0f;
 
 	SetCurrentRotation();
 }
 
-void Player::RotateAngle(float& axisAngle, glm::vec4& va, glm::vec4& vb, float degree)
-{
-	Rotate(degree, va, vb);
-	AddToAngleDegree(axisAngle, degree);
-}
-
-#define RAY_NO_COLLISION 0
-#define RAY_COLLIDE_BLOCK 1
-#define RAY_COLLIDE_MAP_BORDER 2
-
 void Player::SetNewPos(glm::vec4 v, float delta, int sign)
 {
-	float safeDist;
-	Cell_t collideCell = 0;
-	int res = Raycaster::FindCollision(lastPos, v*(float)sign, delta, safeDist, collideCell, noclip, field);
+	glm::vec4 vx = glm::vec4(v.x, 0.0f, 0.0f, 0.0f);
+	MoveAndHandleEvent(vx, delta, sign);
 
-	//Enable out-of box walking
-	//if (!noclip || res == RAY_COLLIDE_MAP_BORDER)
-	if (!noclip)
-	{
-		safeDist = glm::min(safeDist, delta);
-		pos += v*safeDist*(float)sign;
-	}
-	else 
-	{
-		pos += v*delta*(float)sign;
-	}
+	glm::vec4 vy = glm::vec4(0.0f, v.y, 0.0f, 0.0f);
+	MoveAndHandleEvent(vy, delta, sign);
+
+	glm::vec4 vz = glm::vec4(0.0f, 0.0f, v.z, 0.0f);
+	MoveAndHandleEvent(vz, delta, sign);
+
+	glm::vec4 vw = glm::vec4(0.0f, 0.0f, 0.0f, v.w);
+	MoveAndHandleEvent(vw, delta, sign);
+}
+
+void Player::MoveAndHandleEvent(glm::vec4 v, float delta, int sign)
+{
+	float safeDist;
+	//Cell_t collideCell;
+	//int res = Raycaster::FindCollision(lastPos, v*(float)sign, delta, safeDist, collideCell, noclip, field);
+	int res = FindCollision(v*(float)sign, delta, safeDist);
+
+	safeDist = glm::min(safeDist, delta);
+	pos += v*safeDist*(float)sign;
 
 	//glorious victory
-	if (res == RAY_NO_COLLISION && (collideCell & WIN_BLOCK) != 0)
+	if (res == RAY_COLLIDE_WIN_BLOCK)
 	{
-		field->CreateWinRoom();
+		WinField::CreateWinRoom(field);
+		//~(*field);
+		//*field = *winField;
+		//field->CreateWinRoom();
 		Reset();
 		pos = glm::vec4(1.01f, 6.99f, 1.01f, 3.5f);
-		lastPos = pos;
+		defaultPos = pos;
+		//lastPos = pos;
 		RotateXZ(45.0f);
 		RotateXY(-30.0f);
 		noclip = false;
 	}
 
-	lastPos = pos;
+	//lastPos = pos;
 }
 
-void Player::MoveX(float d, int sign) { SetNewPos(vx, d, sign); }
-void Player::MoveY(float d, int sign) { SetNewPos(vy, d, sign); }
-void Player::MoveZ(float d, int sign) { SetNewPos(vz, d, sign); }
-void Player::MoveW(float d, int sign) { SetNewPos(vw, d, sign); }
+int Player::FindCollision(glm::vec4 v, float targetDist, float& safeDist)
+{
+	glm::vec4 tmp;
+	glm::ivec4 map(tmp);
+//	int index;
+	Cell cell;
+	float step = 0.1f;
+	for (float i = 0.0f; ; i += step)
+	{
+		tmp = pos + v*i;
+		map = floor(tmp);
+
+		if (!field->IsCubeIndexValid(map.x, map.y, map.z, map.w))
+		{
+			safeDist = i - step;
+			if (noclip)
+				safeDist = targetDist;
+			return RAY_COLLIDE_MAP_BORDER; //collision with map border
+		}
+
+		cell = field->GetCube(map);
+
+		if (!noclip)
+		{
+			// Check if ray has hit a wall		
+			if (cell.cellType == WALL_BLOCK)
+			{
+				safeDist = i - step;
+				return RAY_COLLIDE_BLOCK; //collision with block
+			}
+
+			//glorious victory
+			if (cell.isWinBlock)
+				return RAY_COLLIDE_WIN_BLOCK;
+		}
+
+		if (i > targetDist)
+		{
+			safeDist = targetDist;
+			return RAY_NO_COLLISION; //no collision detected
+		}
+	}
+}
+
+void Player::MoveX(float d, int sign) { SetNewPos(rotationMatrix.vx, d, sign); }
+void Player::MoveY(float d, int sign) { SetNewPos(rotationMatrix.vy, d, sign); }
+void Player::MoveZ(float d, int sign) { SetNewPos(rotationMatrix.vz, d, sign); }
+void Player::MoveW(float d, int sign) { SetNewPos(rotationMatrix.vw, d, sign); }
 
 #define IF_GRND if (groundRotation)
 
 //3d-roll
 void Player::RotateYZ(float a)
 {
-	RotateAngle(angleYZ, vy, vz, a);
+	rotationMatrix.RotateYZ(a);
+	AddToAngleDegree(angleYZ, a);
 
-	IF_GRND Rotate(-angleXY, vx, vy); //MouseY, up and down rotation
-	IF_GRND Rotate(-angleXZ, vx, vz); //MouseX, rotate left and right
+	IF_GRND rotationMatrix.RotateXY(-angleXY); //MouseY, up and down rotation
+	IF_GRND rotationMatrix.RotateXZ(-angleXZ); //MouseX, rotate left and right
 
 	IF_GRND RebaseToCurrent();
 	SetCurrentRotation();
@@ -194,14 +201,16 @@ void Player::RotateYZ(float a)
 //MouseY
 void Player::RotateXY(float a)
 {
-	RotateAngle(angleXY, vx, vy, a);
+	AddToAngleDegree(angleXY, a);
+	rotationMatrix.RotateXY(a);
 	SetCurrentRotation();
 }
 
 //MouseX
 void Player::RotateXZ(float a)
 {
-	RotateAngle(angleXZ, vx, vz, a);
+	AddToAngleDegree(angleXZ, a);
+	rotationMatrix.RotateXZ(a);
 	SetCurrentRotation();
 }
 
@@ -210,7 +219,8 @@ void Player::RotateYW(float a)
 {
 	IF_GRND ResetToBasis();
 
-	RotateAngle(angleYW, vy, vw, a);
+	AddToAngleDegree(angleYW, a);
+	rotationMatrix.RotateYW(a);
 
 	IF_GRND RebaseToCurrent();
 	SetCurrentRotation();
@@ -219,11 +229,13 @@ void Player::RotateYW(float a)
 //Shift+MouseX
 void Player::RotateZW(float a)
 {
-	IF_GRND Rotate(-angleXY, vx, vy); //MouseY, up and down rotation
+	IF_GRND rotationMatrix.RotateXY(-angleXY); //MouseX, rotate left and right
 
-	RotateAngle(angleZW, vz, vw, a);
+	AddToAngleDegree(angleZW, a);
+	rotationMatrix.RotateZW(a);
 
-	IF_GRND Rotate(-angleXZ, vx, vz); //MouseX, rotate left and right
+	IF_GRND rotationMatrix.RotateXZ(-angleXZ); //MouseX, rotate left and right
+
 	IF_GRND RebaseToCurrent();
 	SetCurrentRotation();
 }
@@ -231,43 +243,16 @@ void Player::RotateZW(float a)
 //Shift+MouseY
 void Player::RotateXW(float a)
 {
-	IF_GRND Rotate(-angleXY, vx, vy); //MouseY, up and down rotation
+	IF_GRND rotationMatrix.RotateXY(-angleXY); //MouseX, rotate left and right
 
-	RotateAngle(angleXW, vx, vw, a);
+	AddToAngleDegree(angleXW, a);
+	rotationMatrix.RotateXW(a);
 
-	IF_GRND Rotate(-angleXZ, vx, vz); //MouseX, rotate left and right
+	IF_GRND rotationMatrix.RotateXZ(-angleXZ); //MouseX, rotate left and right
+
 	IF_GRND RebaseToCurrent();
 	SetCurrentRotation();
 }
-
-//Format Float to string, FF
-std::string Player::FF(float value, unsigned int decimals)
-{
-	std::stringstream stream;
-	stream << std::fixed << std::setprecision(decimals) << value;
-
-	return stream.str();
-}
-
-void Player::Print()
-{
-	Log("vx = glm::vec4(", vx.x, "f, ", vx.y, "f, ", vx.z, "f, ", vx.w, "f);");
-	Log("vy = glm::vec4(", vy.x, "f, ", vy.y, "f, ", vy.z, "f, ", vy.w, "f);");
-	Log("vz = glm::vec4(", vz.x, "f, ", vz.y, "f, ", vz.z, "f, ", vz.w, "f);");
-	Log("vw = glm::vec4(", vw.x, "f, ", vw.y, "f, ", vw.z, "f, ", vw.w, "f);");
-	Log("pos = glm::vec4(", pos.x, "f, ", pos.y, "f, ", pos.z, "f, ", pos.w, "f);");
-
-	/*
-	Log("angles: XZ(mx) =", FF(angleXZ), ", XY(my) =", FF(angleXY), ");");
-	Log("angles: ZW(smX)=", FF(angleZW), ", XW(smY)=", FF(angleXW), ");");
-	Log("angles: YZ(rol)=", FF(angleYZ), ", YW(rlW)=", FF(angleYW), ");");
-	Log("vx = glm::vec4(", FF(vx_basis.x), ", ", FF(vx_basis.y), ", ", FF(vx_basis.z), ", ", FF(vx_basis.w), ");");
-	Log("vy = glm::vec4(", FF(vy_basis.x), ", ", FF(vy_basis.y), ", ", FF(vy_basis.z), ", ", FF(vy_basis.w), ");");
-	Log("vz = glm::vec4(", FF(vz_basis.x), ", ", FF(vz_basis.y), ", ", FF(vz_basis.z), ", ", FF(vz_basis.w), ");");
-	Log("vw = glm::vec4(", FF(vw_basis.x), ", ", FF(vw_basis.y), ", ", FF(vw_basis.z), ", ", FF(vw_basis.w), ");");
-	Log("pos = glm::vec4(", pos.x, ", ", pos.y, "f, ", pos.z, "f, ", pos.w, "f);");
-	*/
-};
 
 //Adds degree to angle and restricts it from -180 to +180 degrees
 //Does not make any matrix rotations
@@ -280,175 +265,4 @@ void Player::AddToAngleDegree(float& axisAngle, float degree)
 		axisAngle -= 360;
 	while (axisAngle < -180)
 		axisAngle += 360;
-}
-
-glm::vec4& Player::BasisVecByNum(int i)
-{
-	if (i == 0)
-		return vx_basis;
-	if (i == 1)
-		return vy_basis;
-	if (i == 2)
-		return vz_basis;
-	if (i == 3)
-		return vw_basis;
-}
-
-float& Player::BasisCoordByPoint(int vecNum, int coordNum)
-{
-	if (coordNum == 0)
-		return BasisVecByNum(vecNum).x;
-	if (coordNum == 1)
-		return BasisVecByNum(vecNum).y;
-	if (coordNum == 2)
-		return BasisVecByNum(vecNum).z;
-	if (coordNum == 3)
-		return BasisVecByNum(vecNum).w;
-}
-
-int Player::MaxCoordInt(glm::vec4& vec)
-{
-	if (abs(vec.x) >= std::max(abs(vec.y), std::max(abs(vec.z), abs(vec.w))))
-		return 0;
-
-	if (abs(vec.y) >= std::max(abs(vec.x), std::max(abs(vec.z), abs(vec.w))))
-		return 1;
-
-	if (abs(vec.z) >= std::max(abs(vec.y), std::max(abs(vec.x), abs(vec.w))))
-		return 2;
-
-	if (abs(vec.w) >= std::max(abs(vec.y), std::max(abs(vec.z), abs(vec.x))))
-		return 3;
-}
-
-float Player::RotateToZero(float &coordinate, glm::vec4 &veca, glm::vec4 &vecb, unsigned int maxSteps)
-{
-	unsigned int i = 0;
-	float angleRotated = 0;
-
-	if (abs(coordinate) < 0.0005f)
-		return angleRotated;
-
-	float step = 0.01f;
-
-	float prevValue = coordinate;
-	Rotate(step, veca, vecb);
-	angleRotated += step;
-	i++;
-
-	if (abs(coordinate) > abs(prevValue))
-	{
-		step = -step;
-		Rotate(step, veca, vecb);
-		angleRotated += step;
-		i--;
-	}
-
-	while (abs(coordinate) > 0.0005f && i < maxSteps)
-	{
-		float prevValue = coordinate;
-		Rotate(step, veca, vecb);
-
-		angleRotated += step;
-		i++;
-	}
-
-	return angleRotated;
-}
-
-void Player::RoundBasisAngles()
-{
-	std::set<int> coordsDone = std::set<int>(); //coords that has been rotated to 1 in any vector
-	std::set<int> vectorsDone = std::set<int>(); //vectors that has 3 coords rotated to zero
-	int curVector = 3; //starting from vw_basis
-
-	while (vectorsDone.size() < 4)
-	{
-		//find coordinate with maximum value to rotate it to 1/-1 
-		float maxCoord = 0;
-		int OrtoCoordNum = -1;
-		for (int i = 0; i < 4; i++)
-			if (coordsDone.find(i) == coordsDone.end())
-				if (abs(BasisCoordByPoint(curVector, i)) > maxCoord)
-				{
-					maxCoord = abs(BasisCoordByPoint(curVector, i));
-					OrtoCoordNum = i; //future winner
-				}
-
-		float &coordOrto = BasisCoordByPoint(curVector, OrtoCoordNum);
-		coordsDone.insert(OrtoCoordNum); //since now skip this coordinate for rotation purposes
-
-		bool firstTime = true;
-		int vecForRotation = -1;
-
-		int coordForRotation = -1;
-
-		//define static vector for rotation for all 3 zero-rotated coords
-		int vecForRotation2 = curVector;
-
-		//in case we need to rotate coordinate to 1 (e.g. w)
-		//But corresponding vector is already ortogonated (e.g. vw_basis)
-		//we replace it by ortogonated coordinate from it (e.g. vw_basis.z)
-		if (vectorsDone.find(OrtoCoordNum) != vectorsDone.end())
-		{
-			vecForRotation2 = OrtoCoordNum;
-			while (vectorsDone.find(vecForRotation2) != vectorsDone.end()) {
-				int replaceVector = *vectorsDone.find(vecForRotation2);
-				vecForRotation2 = MaxCoordInt(BasisVecByNum(replaceVector));
-			}
-		}
-
-		//rotate until we have OrtoVector equal to 1
-		//We check that all others are zero
-		//Done for presicion purpose
-		float maxNonOrtoCoord = 0;
-		while (abs(maxNonOrtoCoord) > 0.001 || firstTime)
-		{
-			//Plan:
-			//1. Find coord for rotation
-			//2. Find corresponding vector for rotation
-			//3. Rotate
-			//4. Repeat
-			if (!firstTime)
-				RotateToZero(BasisCoordByPoint(curVector, coordForRotation), BasisVecByNum(vecForRotation), BasisVecByNum(vecForRotation2), 1);
-
-			firstTime = false;
-
-			//find biggest coord that needs to be rotated to zero
-			maxNonOrtoCoord = 0;
-			for (int i = 0; i < 4; i++)
-				if (coordsDone.find(i) == coordsDone.end())
-					if (abs(BasisCoordByPoint(curVector, i)) > abs(maxNonOrtoCoord))
-					{
-						maxNonOrtoCoord = abs(BasisCoordByPoint(curVector, i));
-						coordForRotation = i;
-					}
-
-			//find corresponding vector which needs to be rotated to get coordinate to zero best way
-			vecForRotation = coordForRotation;
-			if (vecForRotation2 == vecForRotation)
-				vecForRotation = OrtoCoordNum;
-			while (vectorsDone.find(vecForRotation) != vectorsDone.end())
-			{
-				int replaceVector = *vectorsDone.find(vecForRotation);
-				vecForRotation = MaxCoordInt(BasisVecByNum(replaceVector));
-			}
-			if (vecForRotation2 == vecForRotation)
-				vecForRotation = OrtoCoordNum;
-		}
-		//end while rotation
-
-		//move to the next vector for ortogonation
-		vectorsDone.insert(curVector);
-		if (vectorsDone.size() > 3)
-			break;
-		else if (vectorsDone.find(OrtoCoordNum) == vectorsDone.end())
-			curVector = OrtoCoordNum; //chain next vector based on previous
-		else
-		{//if chain loops take any non processed vector
-			curVector = 3;
-			while (vectorsDone.find(curVector) != vectorsDone.end())
-				curVector--;
-		}
-	}
 }

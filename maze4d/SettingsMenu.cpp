@@ -39,12 +39,12 @@ void SettingsMenu::Render(uint8_t* buffer)
 		if (paramIsEditing)
 			valueDisplayButton.text = inputParameterTxt;// ParamTextForDisplay(inputParameter, it->Value.valueType);
 
-		RenderButton(it->button, buffer, xPosition, yPosition - yDelta, it == activeParam);
-		RenderButton(valueDisplayButton, buffer, xPosition + it->button.width * 105 / 100, yPosition - yDelta, isEditMode && it == activeParam);
+		RenderButton(it->button,  xPosition, yPosition - yDelta, it == activeParam);
+		RenderButton(valueDisplayButton, xPosition + it->button.width * 105 / 100, yPosition - yDelta, isEditMode && it == activeParam);
 		yPosition = yPosition - it->button.height - yDelta;
 	}
 
-	RenderButton(backButton, buffer, xPosition, yPosition - yDelta, activeParam == paramList.end());
+	RenderButton(backButton, xPosition, yPosition - yDelta, activeParam == paramList.end());
 	yPosition = yPosition - backButton.height - yDelta;
 }
 

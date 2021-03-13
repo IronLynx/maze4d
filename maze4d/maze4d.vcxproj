@@ -98,6 +98,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\glfw-3.3.2.bin.WIN32\lib-vc2015\glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;..\freetype2\freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\simple2d;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)*.dll" "$(OutDir)"
@@ -144,7 +145,8 @@ xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\glfw-3.3.2.bin.WIN32\lib-vc2015\glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;..\freetype2\freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\freetype2\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\simple2d;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <Profile>true</Profile>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)*.dll" "$(OutDir)"
@@ -172,6 +174,7 @@ xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>..\glfw-3.3.2.bin.WIN32\lib-vc2015\glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -185,29 +188,37 @@ xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
     <ClCompile Include="MainUiController.cpp" />
     <ClCompile Include="Maze.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="MazeField.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="RaycastingShader.cpp" />
     <ClCompile Include="SettingsMenu.cpp" />
+    <ClCompile Include="SettingsMenuEditorStart.cpp" />
     <ClCompile Include="SettingsMenuGameStart.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="UserInterfaceClasses.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="WinField.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\glad\include\glad\glad.h" />
+    <ClInclude Include="Cell.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="GameGraphics.h" />
+    <ClInclude Include="MapEditor.h" />
     <ClInclude Include="Maze.h" />
+    <ClInclude Include="MazeField.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerController.h" />
-    <ClInclude Include="Raycaster.h" />
     <ClInclude Include="Field.h" />
     <ClInclude Include="Game.h" />
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RaycastingShader.h" />
+    <ClInclude Include="RotationMatrix.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="UserInterfaceClasses.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="WinField.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="VertexShader.hlsl">

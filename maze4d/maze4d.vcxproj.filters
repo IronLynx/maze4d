@@ -12,8 +12,23 @@
     <Filter Include="Source files\UserInterface">
       <UniqueIdentifier>{56695b09-2e16-4143-91a5-d211a643e6cb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header files\Shaders">
-      <UniqueIdentifier>{cc9357cc-69ea-4852-985b-b3872eea9286}</UniqueIdentifier>
+    <Filter Include="Header files\Field">
+      <UniqueIdentifier>{23a9cc0d-1140-4270-941a-b6c88c8a91c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\Player">
+      <UniqueIdentifier>{710f68b8-7629-485d-a950-a1109e3ef6fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Field">
+      <UniqueIdentifier>{2570bf61-f2af-4489-8d52-6d77a597121e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Player">
+      <UniqueIdentifier>{0c368030-4fa0-462d-8915-343ab6790e39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\FieldGenerators">
+      <UniqueIdentifier>{bacd4367-b483-460d-a217-22bc355c2659}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files\FieldGenerators">
+      <UniqueIdentifier>{ff985b34-fcfe-4afd-b045-d3458cd1ee86}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,15 +42,6 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="Utils.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="Field.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="Maze.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="Cube.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="UserInterfaceClasses.cpp">
@@ -59,11 +65,32 @@
     <ClCompile Include="SettingsMenuGameStart.cpp">
       <Filter>Source files\UserInterface</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source files</Filter>
+    <ClCompile Include="Field.cpp">
+      <Filter>Source files\Field</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>Source files\Field</Filter>
     </ClCompile>
     <ClCompile Include="Texture.cpp">
-      <Filter>Source files</Filter>
+      <Filter>Source files\Field</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Maze.cpp">
+      <Filter>Source files\FieldGenerators</Filter>
+    </ClCompile>
+    <ClCompile Include="MazeField.cpp">
+      <Filter>Source files\FieldGenerators</Filter>
+    </ClCompile>
+    <ClCompile Include="RaycastingShader.cpp">
+      <Filter>Source files\Field</Filter>
+    </ClCompile>
+    <ClCompile Include="WinField.cpp">
+      <Filter>Source files\FieldGenerators</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsMenuEditorStart.cpp">
+      <Filter>Source files\UserInterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,31 +106,7 @@
     <ClInclude Include="Utils.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="Field.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="Config.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Raycaster.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Maze.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Cube.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerController.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="UserInterfaceClasses.h">
@@ -112,10 +115,48 @@
     <ClInclude Include="GameGraphics.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Cell.h">
+      <Filter>Header files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>Header files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Field.h">
+      <Filter>Header files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="RaycastingShader.h">
+      <Filter>Header files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header files\Field</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerController.h">
+      <Filter>Header files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationMatrix.h">
+      <Filter>Header files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Maze.h">
+      <Filter>Header files\FieldGenerators</Filter>
+    </ClInclude>
+    <ClInclude Include="MazeField.h">
+      <Filter>Header files\FieldGenerators</Filter>
+    </ClInclude>
+    <ClInclude Include="MapEditor.h">
+      <Filter>Header files\FieldGenerators</Filter>
+    </ClInclude>
+    <ClInclude Include="WinField.h">
+      <Filter>Header files\FieldGenerators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="VertexShader.hlsl" />
     <None Include="FragmentShader.hlsl" />
-    <None Include="FragmentRaycasting4d.hlsl" />
+    <None Include="FragmentRaycasting4d.hlsl">
+      <Filter>Source files\Field</Filter>
+    </None>
   </ItemGroup>
 </Project>
