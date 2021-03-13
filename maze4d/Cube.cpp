@@ -2,6 +2,7 @@
 
 
 Cube::TextureSet_t Cube::textureSet;
+Texture Cube::textureLight;
 
 void Cube::Init(Shader* shader)
 {
@@ -14,72 +15,43 @@ void Cube::Init(Shader* shader)
 	textureSet[NEG_W].Init(glm::ivec3(282, 86, 80)); // purple
 	textureSet[POS_W].Init(glm::ivec3(  0,  0, 60)); // gray
 
+	textureLight.InitLight();
+
 	LoadToGL(shader);
 	LoadLightTextureToGL(shader);
 }
 
-void Cube::LoadToGL(Shader* shader)
+void Cube::BindTextures()
 {
-	//return;
-	GLsizei size = Texture::TEX_SIZE*Texture::TEX_SIZE*Texture::TEX_SIZE;
-	int width = Texture::TEX_SIZE;
-	int height = Texture::TEX_SIZE;
-	int depth = Texture::TEX_SIZE;
-
-
-	auto GetIndex = [&](int x, int y, int z)
-	{
-		return 4 * (z * width*height + y * width + x);
-	};
-
-	//int indx = GetIndex(5, 4, 3, 2);
-
-	GLint* EdgeTextureUnits = new GLint[8];
-	GLuint* TexturesId = new GLuint[8];
-	glUseProgram(shader->ID);
-
 	for (int edge = 0; edge < 8; edge++)
 	{
-		uint8_t* buf = new uint8_t[size * 4];
-
-
-		for (int x = 0; x < Texture::TEX_SIZE; x++)
-			for (int y = 0; y < Texture::TEX_SIZE; y++)
-				for (int z = 0; z < Texture::TEX_SIZE; z++)
-				{
-					int idx = GetIndex(x, y, z);
-					glm::uvec3 pixel = textureSet[edge].TexByIndex(x, y, z, 15);
-					buf[idx + 0] = pixel.x;// pixel.x; //Red
-					buf[idx + 1] = pixel.y; //Green
-					buf[idx + 2] = pixel.z; //Blue
-					buf[idx + 3] = 255; //Alpha
-				}
-
-		EdgeTextureUnits[edge] = 50 + edge;
-		glActiveTexture(GL_TEXTURE0 + EdgeTextureUnits[edge]);
-
-		glGenTextures(1, &TexturesId[edge]);
-		glBindTexture(GL_TEXTURE_3D, TexturesId[edge]);
-		// set the texture wrapping parameters
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT); //horizontal wrap method
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT); //vertical wrap method
-		
-		// set texture filtering parameters
-		GLint smootheringParam = Texture::TEX_SMOOTHERING_FLAG ? GL_LINEAR : GL_NEAREST;
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, smootheringParam); //GL_LINEAR GL_NEAREST
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, smootheringParam);
-
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, Texture::TEX_SIZE, Texture::TEX_SIZE, Texture::TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
-		delete[] buf;
+		glActiveTexture(GL_TEXTURE0 + 50 + edge);
+		glBindTexture(GL_TEXTURE_3D, textureSet[edge].textureId);
 	}
 
-	//for (int i=0;i<8;i++) EdgeTextureIds[i] = 50;
+	glActiveTexture(GL_TEXTURE0 + 50 + 9);
+	glBindTexture(GL_TEXTURE_3D, textureLight.textureId);
+}
 
-	unsigned int max = GL_MAX_TEXTURE_BUFFER_SIZE;
+void Cube::LoadToGL(Shader* shader)
+{
+	GLint* EdgeTextureUnits = new GLint[8];
 	glUseProgram(shader->ID);
-	GLint variableId = glGetUniformLocation(shader->ID, "edge3dCube");
-	glUniform1iv(variableId, 8, EdgeTextureUnits); // Texture unit 4 is for current map.
+
+	BindTextures();
+	for (int edge = 0; edge < 8; edge++)
+		EdgeTextureUnits[edge] = 50 + edge;
+
+	//actually bind variables
+	glUseProgram(shader->ID);
+	GLint loc = glGetUniformLocation(shader->ID, "edge3dCube");
+	glUniform1iv(loc, 8, EdgeTextureUnits);
+
+	glUseProgram(shader->ID);
+	loc = glGetUniformLocation(shader->ID, "light3dCube");
+	glUniform1i(loc, 50+9); // Texture unit 4 is for current map.
+
+	delete[] EdgeTextureUnits;
 
 }
 
@@ -101,10 +73,8 @@ void Cube::LoadLightTextureToGL(Shader* shader)
 	GLint LightTextureUnit;
 	GLuint TexturesId;
 	glUseProgram(shader->ID);
-
 	
 	uint8_t* buf = new uint8_t[size * 4];
-
 
 	for (int x = 0; x < Texture::TEX_SIZE; x++)
 		for (int y = 0; y < Texture::TEX_SIZE; y++)
@@ -120,6 +90,8 @@ void Cube::LoadLightTextureToGL(Shader* shader)
 					buf[idx + 1] = 233;
 					buf[idx + 2] = 68;
 					buf[idx + 3] = 255; //Alpha
+
+					buf[idx + 1] = 68;
 				}
 				else
 				{
@@ -145,83 +117,10 @@ void Cube::LoadLightTextureToGL(Shader* shader)
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, smootheringParam);
 
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, Texture::TEX_SIZE, Texture::TEX_SIZE, Texture::TEX_SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
-
+	
 	glUseProgram(shader->ID);
 	GLint variableId = glGetUniformLocation(shader->ID, "light3dCube");
-	glUniform1i(variableId, LightTextureUnit); // Texture unit 4 is for current map.
-}
+	glUniform1i(variableId, LightTextureUnit); 
 
-
-
-
-void Cube::GetPixel(int edgeNum, glm::u8vec3& pixel, glm::vec3 texCoord,
-	int& px, int& py, int& pz, int& pw, Cell_t& cell, Light_t& light)
-{
-	int lightLevel = ((light >> (edgeNum * 4)) & (Texture::LIGHT_GRAD - 1));
-
-	// Converting coordinates from absolute to relative
-	// to the position of the cube (in range 0..1)
-	switch (edgeNum)
-	{
-	case NEG_X:
-	case POS_X:
-	{
-		texCoord[0] -= py;
-		texCoord[1] -= pz;
-		texCoord[2] -= pw;
-		break;
-	}
-	case NEG_Y:
-	case POS_Y:
-	{
-		texCoord[0] -= px;
-		texCoord[1] -= pz;
-		texCoord[2] -= pw;
-		break;
-	}
-	case NEG_Z:
-	case POS_Z:
-	{
-		texCoord[0] -= px;
-		texCoord[1] -= py;
-		texCoord[2] -= pw;
-		break;
-	}
-	case NEG_W:
-	case POS_W:
-	{
-		texCoord[0] -= px;
-		texCoord[1] -= py;
-		texCoord[2] -= pz;
-		break;
-	}
-	default:
-		break;
-	}
-
-	int x = int(texCoord[0] * Texture::TEX_SIZE);
-	int y = int(texCoord[1] * Texture::TEX_SIZE);
-	int z = int(texCoord[2] * Texture::TEX_SIZE);
-	pixel = textureSet[edgeNum].TexByIndex(x, y, z, lightLevel);
-
-	//Add border to light cell
-	bool isLightCell = (cell & LIGHT_BLOCK) != 0;	
-	if (isLightCell)
-	{
-		if (glm::abs(texCoord[0] - 0.5f) < (0.5f - Texture::BORDER_SIZE / Texture::TEX_SIZE) &&
-			glm::abs(texCoord[1] - 0.5f) < (0.5f - Texture::BORDER_SIZE / Texture::TEX_SIZE) &&
-			glm::abs(texCoord[2] - 0.5f) < (0.5f - Texture::BORDER_SIZE / Texture::TEX_SIZE))
-		{
-			pixel.x = 255;
-			pixel.y = 252;
-			pixel.z = 229;
-		}	
-		else
-		{
-			pixel.x = 255;
-			pixel.y = 233;
-			pixel.z = 68;
-		}
-	}
+	delete[] buf;
 }

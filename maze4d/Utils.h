@@ -1,5 +1,6 @@
 #pragma once
 
+//#include <simple2d.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
@@ -24,6 +25,9 @@
 
 #include <glm/ext.hpp>
 
+
+
+
 #ifdef _WIN32
 namespace Windows
 {
@@ -41,6 +45,8 @@ namespace Windows
 #include <vector>
 #include <stdexcept>
 #include <random>
+
+
 
 #define NEG_X 0
 #define POS_X 1
@@ -181,3 +187,24 @@ static void HSVtoRGB(int H, int S, int V, glm::u8& R, glm::u8& G, glm::u8& B) {
 	G = glm::u8((g + m) * 255);
 	B = glm::u8((b + m) * 255);
 }
+
+//Do nothing by default
+class IInputController
+{
+public:
+	virtual void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) {}
+	virtual void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods) {}
+	virtual void OnMouseInput(GLFWwindow* window, double xpos, double ypos) {}
+	virtual void OnScrollInput(GLFWwindow* window, double xoffset, double yoffset) {}
+	virtual void FreezeController() {}
+	virtual void UnFreezeController() {}
+};
+
+
+class IDrawable
+{
+public:
+	virtual void Draw() {}
+};
+
+

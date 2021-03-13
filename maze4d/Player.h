@@ -1,12 +1,29 @@
 #pragma once
 
+
 #include <Field.h>
-#include <Raycaster.h>
+#include <RotationMatrix.h>
+#include <MazeField.h>
+#include <WinField.h>
+#include <Utils.h>
+
+#include <fstream>
+#include <sstream>
+#include <iomanip> 
+#include <math.h>
+#include <set>
+
+
+
+class Field;
 
 class Player
 {
 public:
 	Player() {}
+
+	RotationMatrix basisMatrix;
+	RotationMatrix rotationMatrix;
 
 	void Init(Field* field, bool groundRotation = false);
 
@@ -17,8 +34,6 @@ public:
 	
 	void SetCurrentRotation(); //works only for groundRotation
 	void AlignRotation();
-
-	static void Rotate(float a, glm::vec4& va, glm::vec4& vb);
 
 	void SetNewPos(glm::vec4 v, float delta, int sign);
 
@@ -35,22 +50,8 @@ public:
 	void RotateZW(float a); //Shift+MouseX	
 	void RotateXW(float a); //Shift+MouseY
 
-	//Format Float to string, FF
-	std::string FF(float value, unsigned int decimals = 2);
-	void Print();
-
-	glm::vec4 vx; // always points at center of screen
-	glm::vec4 vy;
-	glm::vec4 vz;
-	glm::vec4 vw;
-	
-	glm::vec4 vx_basis; 
-	glm::vec4 vy_basis;
-	glm::vec4 vz_basis;
-	glm::vec4 vw_basis;
-
 	glm::vec4 pos;
-	glm::vec4 lastPos;
+	glm::vec4 defaultPos = glm::vec4(1.2f);
 
 	//inside 3d-slice rotation angles	
 	float angleXY; //MouseY
@@ -69,13 +70,13 @@ public:
 
 private:
 
-	void RotateAngle(float& axisAngle, glm::vec4& va, glm::vec4& vb, float degree);
+	#define RAY_NO_COLLISION 0
+	#define RAY_COLLIDE_BLOCK 1
+	#define RAY_COLLIDE_MAP_BORDER 2
+	#define RAY_COLLIDE_WIN_BLOCK 3
+
+	void MoveAndHandleEvent(glm::vec4 v, float delta, int sign);
+	int FindCollision(glm::vec4 v, float targetDist, float& safeDist);
 	void AddToAngleDegree(float& axisAngle, float degree); //Does not make any matrix rotations
 
-	glm::vec4& BasisVecByNum(int i);
-	float& BasisCoordByPoint(int vecNum, int coordNum);
-	int MaxCoordInt(glm::vec4& vec);
-
-	float RotateToZero(float &coordinate, glm::vec4 &veca, glm::vec4 &vecb, unsigned int maxSteps = 1);
-	void RoundBasisAngles();
 };

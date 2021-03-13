@@ -1,40 +1,47 @@
 #include <UserInterfaceClasses.h>
 
-//renders given text inside buffer with MaxWidth/MaxHeight parameters
-void UserInterfaceItem::RenderRectangle(uint8_t* buffer, int posX, int posY, int width, int height, glm::u8vec3 color)
+Shader* UserInterfaceItem::shader = nullptr;
+RectangleGraphics* UserInterfaceItem::graphics = nullptr;
+
+void UserInterfaceItem::InitGL()
+{
+	if (shader == nullptr)
+	{
+		shader = new Shader();
+		shader->LoadFromFiles("VertexShader.hlsl", "FragmentShader.hlsl");
+	}
+
+	if (graphics == nullptr)
+	{
+		graphics = new RectangleGraphics(shader, 0.0f, 0.0f, 1.0f, 1.0f);
+	}
+}
+
+void UserInterfaceItem::RenderRectangle(int posX, int posY, int width, int height, glm::u8vec3 color)
 {
 	int maxWidth = game->viewWidth;
 	int maxHeight = game->viewHeight;
 
-	int xGlobalOffset = posX;
-	int yGlobalOffset = posY;
-	int maxPixPos = 0;
+	float fPosX = 2.0f * posX / maxWidth - 1.0f;
+	float fPosY = 2.0f * posY / maxHeight - 1.0f;
+	float fWidth = 2.0f * width / maxWidth;
+	float fHeight = 2.0f * height / maxHeight;
 
-	int maxPosShouldBe = maxWidth*maxHeight * 4 - 1;
+	//GameGraphics gr = GameGraphics(shader, fPosX, fPosY, fWidth, fHeight);
+	graphics->SetNewPosition(fPosX, fPosY, fWidth, fHeight);
 
-	for (int rows = 0; rows < height; rows++)
-		for (int xi = 0; xi < width; xi++)
-		{
-			int pixPos = (rows + yGlobalOffset) * maxWidth * 4 + (xi + xGlobalOffset) * 4;
+	uint8_t* onePixelBuffer = new uint8_t[4];
+	memset(onePixelBuffer, 0, 4);
+	onePixelBuffer[0] = color.x;
+	onePixelBuffer[1] = color.y;
+	onePixelBuffer[2] = color.z;
+	onePixelBuffer[3] = 255; 
 
-			if (pixPos < maxWidth*maxHeight * 4 &&
-				pixPos > 0)
-			{
-				
-				if (pixPos > maxPixPos) maxPixPos = pixPos;
-				float alpha = 1.0f; //no opacity
-
-				buffer[pixPos] = color.x;// *alpha + buffer[pixPos] * (1 - alpha);
-				buffer[pixPos + 1] = color.y;// *alpha + buffer[pixPos + 1] * (1 - alpha);
-				buffer[pixPos + 2] = color.z;// *alpha + buffer[pixPos + 2] * (1 - alpha);
-				buffer[pixPos + 3] = 255; //UI rectangles are always opaque
-			}
-		}
-	
-	maxPixPos = maxPixPos;
+	graphics->Draw(color);
+	delete[] onePixelBuffer;
 }
 
-void UserInterfaceItem::RenderUItext(std::string text, int fontSize, uint8_t* buffer, int posX, int posY, glm::u8vec3 color)
+void UserInterfaceItem::RenderUItext(std::string text, int fontSize, int posX, int posY, glm::u8vec3 color)
 {
 	int maxWidth = game->viewWidth;
 	int maxHeight = game->viewHeight;
@@ -59,6 +66,8 @@ void UserInterfaceItem::RenderUItext(std::string text, int fontSize, uint8_t* bu
 	int xGlobalOffset = posX;
 	int yGlobalOffset = posY;
 
+	//GameGraphics gr = GameGraphics(shader, 0.0f, 0.0f, 0.5f, 0.5f);
+
 	std::string::const_iterator c;
 	for (c = text.begin(); c != text.end(); c++)
 	{
@@ -70,23 +79,36 @@ void UserInterfaceItem::RenderUItext(std::string text, int fontSize, uint8_t* bu
 
 		int yOffset = yGlobalOffset + ch->bitmap_top - ch->bitmap.rows; //calculate up/down y offset for such letters as 'g'
 
-		for (int rows = 0; rows < (int)ch->bitmap.rows; rows++)
-			for (int xi = 0; xi < (int)ch->bitmap.width; xi++)
-				if (rows + yOffset < (int)maxHeight &&
-					rows + yOffset > 0 &&
-					xi + xGlobalOffset < (int)maxWidth &&
-					xi + xGlobalOffset > 0)
-				{
-					int glyphPixGray = ch->bitmap.buffer[((ch->bitmap.rows - rows - 1) * ch->bitmap.pitch + xi)];
-					int pixPos = (rows + yOffset) * maxWidth * 4 + (xi + xGlobalOffset) * 4;
+		float fPosX = 2.0f * xGlobalOffset / maxWidth - 1.0f;
+		float fPosY = 2.0f * yOffset / maxHeight - 1.0f;
+		float fWidth = 2.0f * ch->bitmap.pitch / maxWidth;
+		float fHeight = 2.0f * ch->bitmap.rows / maxHeight;
 
-					float alpha = (float)glyphPixGray / (float)ch->bitmap.num_grays;
 
-					buffer[pixPos] = (unsigned int)round(color.x * alpha + buffer[pixPos] * (1 - alpha));
-					buffer[pixPos + 1] = (unsigned int)round(color.y * alpha + buffer[pixPos + 1] * (1 - alpha));
-					buffer[pixPos + 2] = (unsigned int)round(color.z * alpha + buffer[pixPos + 2] * (1 - alpha));
-					buffer[pixPos + 3] = (unsigned int)round(255 * alpha + buffer[pixPos + 3] * (1 - alpha));
-				}
+		graphics->SetNewPosition(fPosX, fPosY, fWidth, fHeight);
+
+		int maxWidth = ch->bitmap.pitch;
+		int maxHeight = ch->bitmap.rows;
+		int bufSize = 4 * maxHeight * maxWidth;
+
+		uint8_t* buffer = new uint8_t[bufSize];
+
+		for (int rows = 0; rows < maxHeight; rows++)
+			for (int xi = 0; xi < maxWidth; xi++)
+			{
+				int glyphPixGray = ch->bitmap.buffer[((ch->bitmap.rows - rows - 1) * ch->bitmap.pitch + xi)];
+				int pixPos = rows * maxWidth * 4 + xi * 4;
+
+				float alpha = (float)glyphPixGray / (float)ch->bitmap.num_grays;
+
+				buffer[pixPos] = (uint8_t)round(color.x);
+				buffer[pixPos + 1] = (uint8_t)round(color.y);
+				buffer[pixPos + 2] = (uint8_t)round(color.z);
+				buffer[pixPos + 3] = (uint8_t)round(255 * alpha);
+			}
+
+		graphics->Draw(buffer, maxWidth, maxHeight, GL_RGBA);
+		delete[] buffer;
 
 		xGlobalOffset += ch->advance.x / 64; //advance is in Cartesian scale, which means 64 cartesian steps equals 1 pixel
 	}
@@ -94,10 +116,10 @@ void UserInterfaceItem::RenderUItext(std::string text, int fontSize, uint8_t* bu
 
 	FT_Done_Face(face);   // Завершение работы с шрифтом face
 	FT_Done_FreeType(ft); // Завершение работы FreeType
-
+	
 };
 
-void UserInterfaceItem::RenderButton(Button button, uint8_t* buffer, int posX, int posY, bool isHovered)
+void UserInterfaceItem::RenderButton(Button button, int posX, int posY, bool isHovered)
 {
 	//return;
 	int fontSizeY = button.height * 10 / 17;
@@ -112,14 +134,14 @@ void UserInterfaceItem::RenderButton(Button button, uint8_t* buffer, int posX, i
 	if (isHovered)
 		backgroundPixel = glm::u8vec3(255, 255, 150);
 
-	RenderRectangle(buffer, posX, posY, button.width, button.height, blackPixel);
-	RenderRectangle(buffer, posX + borderWidth, posY + borderWidth, button.width - borderWidth * 2, button.height - borderWidth * 2, backgroundPixel);
+	RenderRectangle(posX, posY, button.width, button.height, blackPixel);
+	RenderRectangle(posX + borderWidth, posY + borderWidth, button.width - borderWidth * 2, button.height - borderWidth * 2, backgroundPixel);
 	
 
 	std::replace(button.text.begin(), button.text.end(), '_', ' ');
 	std::transform(button.text.begin(), ++button.text.begin(), button.text.begin(), ::toupper);
 
-	RenderUItext(button.text, fontSize, buffer, posX + button.width / 15, posY + button.height * 10 / 27, blackPixel);
+	RenderUItext(button.text, fontSize, posX + button.width / 15, posY + button.height * 10 / 27, blackPixel);
 
 	//Add helper text at the bottom of the screen
 	if (isHovered)
@@ -131,8 +153,8 @@ void UserInterfaceItem::RenderButton(Button button, uint8_t* buffer, int posX, i
 
 		int helperFontSize = std::min(helperFontSizeX, helperFontSizeY);
 
-		RenderRectangle(buffer, 0, 0, game->viewWidth, helperFontSize+10, backgroundPixel);
-		RenderUItext(button.helpText, helperFontSize, buffer, 10, 10, blackPixel);
+		RenderRectangle( 0, 0, game->viewWidth, helperFontSize+10, backgroundPixel);
+		RenderUItext(button.helpText, helperFontSize, 10, 10, blackPixel);
 	}
 }
 

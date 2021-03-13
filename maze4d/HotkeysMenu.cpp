@@ -14,8 +14,8 @@ void HotKeysMenu::Render(uint8_t* buffer)
 	glm::u8vec3 blackPixel = glm::u8vec3(0, 0, 0);
 	glm::u8vec3 backgroundPixel = glm::u8vec3(200, 200, 200);
 
-	RenderRectangle(buffer, xPosition, yPosition, width, height, blackPixel);
-	RenderRectangle(buffer, xPosition + 3, yPosition + 3, width - 6, height - 6, backgroundPixel);
+	RenderRectangle(xPosition, yPosition, width, height, blackPixel);
+	RenderRectangle(xPosition + 3, yPosition + 3, width - 6, height - 6, backgroundPixel);
 
 	std::list<std::string> lines = std::list<std::string>();
 	lines.push_back("First person four - dimensional maze game");
@@ -39,11 +39,20 @@ void HotKeysMenu::Render(uint8_t* buffer)
 	lines.push_back("Align W-angle : TAB");
 	lines.push_back("Reset W-angle : B");
 	lines.push_back(" ");
+	lines.push_back("------------Editor tools------------");
+	lines.push_back("New cube      : Left Mouse Click");
+	lines.push_back("Delete cube   : Right Mouse Click");
+	lines.push_back("Solid cube    : 1");
+	lines.push_back("Light cube    : 2");
+	lines.push_back("Clear all     : Delete");
+	lines.push_back("Decrease transparency  : Scroll Down");
+	lines.push_back("Increase transparency  : Scroll Up");
+	lines.push_back(" ");
 	lines.push_back("------------Other------------");
 	lines.push_back("Reset player  : P");
 	lines.push_back("Noclip        : F8");
 	lines.push_back("Fullscreen    : F11");
-	lines.push_back("Lock mouse    : SPACE or mouse button");
+	lines.push_back("Lock mouse    : SPACE");
 	lines.push_back("Menu          : ESC");
 
 	int fontSizeY = height * 9 / 10 / lines.size();
@@ -59,7 +68,7 @@ void HotKeysMenu::Render(uint8_t* buffer)
 	std::list<std::string>::iterator it;
 	for (it = lines.begin(); it != lines.end(); ++it)
 	{
-		RenderUItext(*it, fontSize, buffer, xPosition + width * 1 / 10, yPosition + height * 95 / 100, blackPixel);
+		RenderUItext(*it, fontSize,  xPosition + width * 1 / 10, yPosition + height * 95 / 100, blackPixel);
 		yPosition = yPosition - yDelta;
 	}
 }
