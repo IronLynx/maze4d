@@ -128,7 +128,7 @@ protected:
 	UI_ACTION_CODE activeAction;
 	Game* game = nullptr;
 	static Shader* shader;
-	static GameGraphics* graphics;
+	static RectangleGraphics* graphics;
 };
 
 class HotKeysMenu : public UserInterfaceItem

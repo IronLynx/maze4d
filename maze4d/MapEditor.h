@@ -42,7 +42,7 @@ public:
 			delete LightCubeField;
 
 		LightCubeField = new Field(glm::ivec4(1, 1, 1, 1), 16, game->cfg);
-		LightCubeField->CreateCube(0, 0, 0, 0, new Cell(Field::StdLightCell));
+		LightCubeField->CreateCube(0, 0, 0, 0, Field::StdLightCell);
 		LightCubeField->Init(game->cfg, -0.0f, -0.9f, 0.3f, 0.3f*ratio);
 		//LightCubeField->Init(game->cfg, -01.0f, -01.0f, 2.0f, 2.0f);
 		LightCubeField->SetBackgroundColor(255.0f / 255.0f, 252.0f / 255.0f, 229.0f / 255.0f, 0.0f);
@@ -54,7 +54,7 @@ public:
 
 		MapBordersField = new Field(glm::ivec4(3, 3, 3, 3), 16, game->cfg);
 		MapBordersField->CreateBorders();
-		MapBordersField->CreateCube(1, 1, 1, 1, new Cell(LIGHT_BLOCK, 0, false));
+		MapBordersField->CreateCube(1, 1, 1, 1, Cell(LIGHT_BLOCK, 0, false));
 		MapBordersField->Init(game->cfg, -1, -1, 2, 2);
 		MapBordersField->SetBackgroundColor(0.0f, 0.0f, 0.0f, 0.0f);
 		//MapBorders->SetBackgroundColor(1.0f, 0.5f, 0.5f);
@@ -64,19 +64,19 @@ public:
 
 		OneCubeField = new Field(glm::ivec4(3, 3, 3, 3), 16, game->cfg);
 		for (int i = 0; i < OneCubeField->GetTotalSize(); i++)
-			OneCubeField->CreateCube(i, new Cell(LIGHT_BLOCK, 0, false)); //transparent light block for purpose
+			OneCubeField->CreateCube(i, Cell(LIGHT_BLOCK, 0, false)); //transparent light block for purpose
 		OneCubeField->CreateCube(1, 1, 1, 1);
 		OneCubeField->Init(game->cfg, -0.2f, -0.9f, 0.3f, 0.3f*ratio);
 		//OneCubeField->Init(game->cfg, -1, -1, 2, 2);
 		OneCubeField->SetBackgroundColor(0.0f, 0.0f, 0.0f, 0.0f);
 		OneCubeField->SetAntialiasing(2);
 
-		gameGraphics = new GameGraphics(shader, -0.005, -0.005, 0.01, 0.01);
+		gameGraphics = new RectangleGraphics(shader, -0.005, -0.005, 0.01, 0.01);
 		gameGraphics->InitSelfShader();
 		
 	}
 	
-	void AddCube(Cell_t cell = new Cell(1, 255, false))
+	void AddCube(Cell cell = Cell(1, 255, false))
 	{
 		glm::ivec4 map = FindFrontCell(&game->player);
 
@@ -96,7 +96,7 @@ public:
 		Cell_t cell = new Cell(); //emptyCell
 
 		//int idx = game->field->GetIndex(pos.x, pos.y, pos.z, pos.w);
-		game->field->CreateCube(map.x, map.y, map.z, map.w, nullptr);
+		game->field->CreateCube(map.x, map.y, map.z, map.w, Field::StdEmptyCell);
 
 	}
 
@@ -111,7 +111,7 @@ public:
 		if (key == GLFW_KEY_DELETE && action == GLFW_PRESS)
 		{
 			for (int i = 0; i < game->field->GetIndex(game->field->size - 1); i++)
-				game->field->CreateCube(i, new Cell());
+				game->field->CreateCube(i, Cell());
 			game->field->CreateBorders();
 		}
 	}
@@ -119,7 +119,7 @@ public:
 	{
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 		{
-			AddCube(new Cell(activeAddingCell));
+			AddCube(Cell(activeAddingCell));
 		}
 		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 		{
@@ -154,7 +154,7 @@ public:
 			alpha = (int) std::max(30.0f, fAlpha);
 		alpha = (int) std::min(255, alpha);
 		cell.alphaValue = alpha;
-		game->field->CreateCube(map, new Cell(cell));
+		game->field->CreateCube(map, Cell(cell));
 
 	}
 	virtual void FreezeController() {}
@@ -236,7 +236,7 @@ private:
 	Field* LightCubeField;
 	//OneShapeField* SimpleCube;
 	//OneShapeField* LightCube;
-	GameGraphics* gameGraphics;
+	RectangleGraphics* gameGraphics;
 	Shader* shader;
 	Cell activeAddingCell = Cell(1, 255, false);
 };

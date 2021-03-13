@@ -33,7 +33,7 @@ Field* WinField::CreateWinRoom(Field* const field)
 					}
 					else
 					{
-						winField->CreateCube(x, y, z, w, new Cell());
+						winField->CreateCube(x, y, z, w, Cell());
 						//winMap[index] = 0;
 					}
 
@@ -62,7 +62,7 @@ Field* WinField::CreateWinRoom(Field* const field)
 	{
 		for (int i = 0; i < sizeof(letters) / sizeof(letters[0]); i++)
 		{
-			winField->CreateCube(letters[i].x, letters[i].y, letters[i].z, w, new Cell(LIGHT_BLOCK, 0, false));
+			winField->CreateCube(letters[i].x, letters[i].y, letters[i].z, w, Cell(LIGHT_BLOCK, 0, false));
 		}
 	}
 

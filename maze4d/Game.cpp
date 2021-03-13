@@ -99,6 +99,7 @@ void Game::NewEditor()
 
 	field = new Field(fieldSize, lightDist, this->cfg);
 	field->Init(this->cfg, -1, -1, 2, 2);
+	field->CreateCube(glm::vec4(roomSize / 2.0f + 0.2f), Field::StdLightCell);
 
 	player.defaultPos = glm::vec4(roomSize / 2.0f + 0.2f);
 	player.Init(field, cfg->GetBool("ground_rotation"));

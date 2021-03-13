@@ -1,6 +1,7 @@
 #include <Field.h>
 
 const Cell Field::StdLightCell = Cell(LIGHT_BLOCK, 245, false);
+const Cell Field::StdEmptyCell = Cell(EMPTY_BLOCK, 0, false);
 
 Field::Field(const glm::ivec4 size, const int lightDist, Config* cfg)
 	: size(size), totalSize(size.x*size.y*size.z*size.w), lightDist(lightDist)
@@ -73,7 +74,7 @@ Cell Field::GetCube(int index)
 	return *curMap[index];
 }
 
-void Field::CreateCube(int index, Cell_t cell)
+void Field::CreateCube(int index, Cell cell)
 {
 	if (index > GetIndex(size.x-1, size.y-1, size.z-1, size.w-1))
 		return;
@@ -83,23 +84,23 @@ void Field::CreateCube(int index, Cell_t cell)
 	if (curMap[index] != nullptr)
 		delete curMap[index];
 
-	curMap[index] = cell;
+	
 
 	//clear lights
-	if (cell == nullptr)
+	if (cell.cellType == EMPTY_BLOCK)
 	{
 		curLightMap[index] = 0;
+		curMap[index] = nullptr;
 		return;
 	}
 
-	if (cell->cellType == EMPTY_BLOCK)
-		curLightMap[index] = 0;
+	curMap[index] = new Cell(cell);
 
-	if (cell->cellType == LIGHT_BLOCK)
+	if (cell.cellType == LIGHT_BLOCK)
 		GenerateLight(index);
 }
 
-void Field::CreateCube(int x, int y, int z, int w, Cell_t cell)
+void Field::CreateCube(int x, int y, int z, int w, Cell cell)
 {
 	if (!IsCubeIndexValid(x, y, z, w))
 		return;
@@ -116,7 +117,7 @@ void Field::CreateLightCube(int x, int y, int z, int w)
 	if (!IsCubeIndexValid(x, y, z, w))
 		return;
 
-	CreateCube(x, y, z, w, new Cell(StdLightCell));
+	CreateCube(x, y, z, w, StdLightCell);
 
 	curLightMap[index] = UINT32_MAX;
 

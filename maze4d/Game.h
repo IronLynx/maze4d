@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GameGraphics.h>
+#include <RectangleGraphics.h>
 #include <Field.h>
 #include <MazeField.h>
 

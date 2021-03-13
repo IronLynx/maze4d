@@ -9,7 +9,7 @@
 #include <Cube.h>
 #include <Cell.h>
 #include <Config.h>
-#include <GameGraphics.h>
+#include <RectangleGraphics.h>
 #include <RaycastingShader.h>
 #include <Utils.h>
 
@@ -64,14 +64,15 @@ public:
 
 	//Map_t curMap;
 	static const Cell StdLightCell;
+	static const Cell StdEmptyCell;
 	
 	//Editor's instumenrs
 	void CreateBorders();
 
 	//setters for curMap
-	void CreateCube(int x, int y, int z, int w, Cell_t cell = new Cell(WALL_BLOCK, 255, false));
-	void CreateCube(glm::ivec4 pos, Cell_t cell = new Cell(WALL_BLOCK, 255, false)) { CreateCube(pos.x, pos.y, pos.z, pos.w, cell); }
-	void CreateCube(int Idx, Cell_t cell = new Cell(WALL_BLOCK, 255, false));
+	void CreateCube(int x, int y, int z, int w, Cell cell =  Cell(WALL_BLOCK, 255, false));
+	void CreateCube(glm::ivec4 pos, Cell cell =  Cell(WALL_BLOCK, 255, false)) { CreateCube(pos.x, pos.y, pos.z, pos.w, cell); }
+	void CreateCube(int Idx, Cell cell = Cell(WALL_BLOCK, 255, false));
 
 	//getters for curMap
 	Cell GetCube(glm::ivec4 pos) { return GetCube(pos.x, pos.y, pos.z, pos.w); }

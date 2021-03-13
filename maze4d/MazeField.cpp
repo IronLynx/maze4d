@@ -54,7 +54,7 @@ void MazeField::CreateExit(Maze* maze)
 				{
 					for (int w = start.w; w < end.w; w++)
 					{
-						field->CreateCube(x, y, z, w, new Cell(0, 0, true));
+						field->CreateCube(x, y, z, w, Cell(0, 0, true));
 						/*
 						int index = field->GetIndex(x, y, z, w);
 						//curMap[index] = WIN_BLOCK;
@@ -238,7 +238,7 @@ void MazeField::GenerateLight(Maze* maze)
 							y*roomSize + roomSize / 2,
 							z*roomSize + roomSize / 2,
 							w*roomSize + roomSize / 2);
-						field->CreateCube(light, new Cell(Field::StdLightCell));
+						field->CreateCube(light, Field::StdLightCell);
 					}
 					else
 					{
@@ -268,7 +268,7 @@ void MazeField::GenerateLight(Maze* maze)
 						if (maze->size.z == 1) light.z = roomSize / 2;
 						if (maze->size.w == 1) light.w = roomSize / 2;
 
-						field->CreateCube(light, new Cell(Field::StdLightCell));
+						field->CreateCube(light,  Field::StdLightCell);
 					}
 
 					tmpWalls.clear();

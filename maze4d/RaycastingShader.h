@@ -4,7 +4,7 @@
 #include <Player.h>
 #include <Config.h>
 #include <Cell.h>
-#include <GameGraphics.h>
+#include <RectangleGraphics.h>
 #include <Utils.h>
 
 typedef uint32_t Light_t;
@@ -67,6 +67,6 @@ private:
 	glm::ivec4 size;
 
 	GLuint curMapTextureId, curLightMapTextureId;
-	GameGraphics* gameGraphics = nullptr;
+	RectangleGraphics* gameGraphics = nullptr;
 
 };

@@ -204,7 +204,7 @@ xcopy /y /d  "$(ProjectDir)*.hlsl" "$(OutDir)"</Command>
     <ClInclude Include="Cell.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Cube.h" />
-    <ClInclude Include="GameGraphics.h" />
+    <ClInclude Include="RectangleGraphics.h" />
     <ClInclude Include="MapEditor.h" />
     <ClInclude Include="Maze.h" />
     <ClInclude Include="MazeField.h" />

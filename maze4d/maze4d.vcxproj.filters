@@ -112,9 +112,6 @@
     <ClInclude Include="UserInterfaceClasses.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="GameGraphics.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
     <ClInclude Include="Cell.h">
       <Filter>Header files\Field</Filter>
     </ClInclude>
@@ -150,6 +147,9 @@
     </ClInclude>
     <ClInclude Include="WinField.h">
       <Filter>Header files\FieldGenerators</Filter>
+    </ClInclude>
+    <ClInclude Include="RectangleGraphics.h">
+      <Filter>Header files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 #include <UserInterfaceClasses.h>
 
 Shader* UserInterfaceItem::shader = nullptr;
-GameGraphics* UserInterfaceItem::graphics = nullptr;
+RectangleGraphics* UserInterfaceItem::graphics = nullptr;
 
 void UserInterfaceItem::InitGL()
 {
@@ -13,7 +13,7 @@ void UserInterfaceItem::InitGL()
 
 	if (graphics == nullptr)
 	{
-		graphics = new GameGraphics(shader, 0.0f, 0.0f, 1.0f, 1.0f);
+		graphics = new RectangleGraphics(shader, 0.0f, 0.0f, 1.0f, 1.0f);
 	}
 }
 
