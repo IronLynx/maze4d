@@ -18,6 +18,8 @@ RaycastingShader::RaycastingShader(const glm::ivec4 size, Config* cfg)
 
 	gameGraphics = new RectangleGraphics(shader, posBottomX, posBottomY, posWidth, posHeight); //full screen by default
 
+	this->ReadConfig(cfg);
+	Cube::Init(shader);
 	basicResolutionX = glm::abs(cfg->GetInt("width"));
 	basicResolutionY = glm::abs(cfg->GetInt("height"));
 

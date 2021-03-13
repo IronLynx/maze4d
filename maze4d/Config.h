@@ -334,9 +334,9 @@ private:
 	}
 	
 	std::list<ConfigParam> PARAM_LIST{
-		{ "width", { "video", CFG_TYPE_INT, "480", " # Resolution width in pixels" } },
-		{ "height",{ "video", CFG_TYPE_INT, "360", "# Resolution height in pixels" } },
-		{ "window_scale",{ "video", CFG_TYPE_FLOAT, "2.0", " # Window will be resized according to this parameter" } },
+		{ "width", { "video", CFG_TYPE_INT, "1024", " # Resolution width in pixels" } },
+		{ "height",{ "video", CFG_TYPE_INT, "768", "# Resolution height in pixels" } },
+		{ "window_scale",{ "video", CFG_TYPE_FLOAT, "1.0", " # Window will be resized according to this parameter" } },
 
 		{ "maze_room_size",	{ "game", CFG_TYPE_INT,   "8", " # Number of cubes in each maze room axis" } },
 		{ "light_dist",		{ "game", CFG_TYPE_INT,  "18", " # Number of cubes which light can pass before ends" } },
