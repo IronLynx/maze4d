@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <shader.h>
+#include <cstring>
 
 class RectangleGraphics
 {
