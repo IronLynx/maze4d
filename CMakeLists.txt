@@ -26,12 +26,11 @@ add_executable(${PROJECT_NAME}
     maze4d/SettingsMenu.cpp
     maze4d/SettingsMenuGameStart.cpp
     maze4d/SettingsMenuEditorStart.cpp
-    maze4d/Texture.cpp
-    maze4d/UserInterfaceClasses.cpp
     maze4d/MazeField.cpp
     maze4d/WinField.cpp
     maze4d/RaycastingShader.cpp
-    
+    maze4d/Texture.cpp
+    maze4d/UserInterfaceClasses.cpp
 )
 include_directories(SYSTEM ${FREETYPE_INCLUDE_DIRS} glad/include maze4d)
 target_link_libraries(${PROJECT_NAME} gcc_s c glfw OpenGL::GL ${CMAKE_DL_LIBS} ${FREETYPE_LIBRARIES})
