@@ -46,7 +46,7 @@ public:
 	void SetBackgroundColor(glm::vec4  col = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
 	void SetBackgroundColor(float R, float G, float B, float Alpha = 1.0f);
 	void SetCameraView(Player* player);
-	void Field::SetAntialiasing(int antiAliasRate = 1);
+	void SetAntialiasing(int antiAliasRate = 1);
 	void ReadConfig(Config* cfg);
 
 	virtual void Draw();
