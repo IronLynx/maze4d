@@ -123,8 +123,18 @@ void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int
 		game.playerController->OnKeyInput(window, key, scancode, action, mods);
 		//game.playerController->OnKeyInput(window, key, scancode, action, mods);
 	
+}
+
+void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+
+	if (mainUi.isMenu)
+		OnKeyInputMenu(window, key, scancode, action, mods);
+	else
+		OnKeyInputInGame(window, key, scancode, action, mods);
+
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-	//if (false)
+		//if (false)
 	{
 		if (isMouseLocked)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -135,19 +145,11 @@ void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int
 	}
 }
 
-void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-
-	if (mainUi.isMenu)
-		OnKeyInputMenu(window, key, scancode, action, mods);
-	else
-		OnKeyInputInGame(window, key, scancode, action, mods);
-}
-
 void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods)
 {
 	if (game.editorToolsEnabled || game.cfg->GetBool("editor_mode"))
-		editor.OnMouseButtonInput(window, button, action, mods);
+		if (!mainUi.isMenu)
+			editor.OnMouseButtonInput(window, button, action, mods);
 
 	//if ((button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT) && action == GLFW_PRESS)
 	if (false)
