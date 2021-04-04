@@ -25,6 +25,10 @@ add_executable(${PROJECT_NAME}
     maze4d/Player.cpp
     maze4d/SettingsMenu.cpp
     maze4d/SettingsMenuGameStart.cpp
+    maze4d/SettingsMenuEditorStart.cpp
+    maze4d/MazeField.cpp
+    maze4d/WinField.cpp
+    maze4d/RaycastingShader.cpp
     maze4d/Texture.cpp
     maze4d/UserInterfaceClasses.cpp
 )

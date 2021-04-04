@@ -53,7 +53,7 @@ public:
 	bool GetBool(std::string tag)
 	{
 		paramValues param = GetParamByTag(tag);
-		return std::stoi(param.value);
+		return std::stoi(param.value) != 0;
 	}
 
 
@@ -334,29 +334,34 @@ private:
 	}
 	
 	std::list<ConfigParam> PARAM_LIST{
-		{ "width", { "video", CFG_TYPE_INT, "480", " # Resolution width in pixels" } },
-		{ "height",{ "video", CFG_TYPE_INT, "360", "# Resolution height in pixels" } },
-		{ "window_scale",{ "video", CFG_TYPE_FLOAT, "2.0", " # Window will be resized according to this parameter" } },
-		{ "maze_size_x",{ "game", CFG_TYPE_INT,   "3", " # Number of x-rooms" } },
-		{ "maze_size_y",{ "game", CFG_TYPE_INT,   "3", " # Number of y-rooms" } },
-		{ "maze_size_z",{ "game", CFG_TYPE_INT,   "3", " # Number of z-rooms" } },
-		{ "maze_size_w",{ "game", CFG_TYPE_INT,   "3", " # Number of w-rooms" } },
-		{ "maze_room_size",{ "advanced", CFG_TYPE_INT,   "8", "# Number of cubes in each maze room axis" } },
-		{ "light_dist",{ "advanced", CFG_TYPE_INT,  "18", " # Number of cubes which light can pass before ends" } },
-		{ "speed",{ "controls", CFG_TYPE_FLOAT, "5.0", " # Player speed during movement" } },
-		{ "mouse_sens",{ "controls", CFG_TYPE_FLOAT, "1.0", " # Speed of camera rotation" } },
-		{ "seed",{ "game", CFG_TYPE_INT,  "-1", " # set -1 to use random seed" } },
-		{ "multithreading",{ "video", CFG_TYPE_BOOL,   "0", " #  (CPU RENDERING) 0 - disable; 1 - enable. WARNING: CPU usage can reach 100%" } },
-		{ "skip_pixels",{ "video", CFG_TYPE_BOOL,   "0", "  # (CPU RENDERING) set 1 to render all pixels each frame; 0 to render only half" } },
-		{ "anti_aliasing",{ "video", CFG_TYPE_INT,   "1", "  # (GPU RENDERING) 0 - x1; 1 - x4; 2 - x9" } },
-		{ "vsync",{ "video", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable" } },		
+		{ "width", { "video", CFG_TYPE_INT, "1024", " # Resolution width in pixels" } },
+		{ "height",{ "video", CFG_TYPE_INT, "768", "# Resolution height in pixels" } },
+		{ "window_scale",{ "video", CFG_TYPE_FLOAT, "1.0", " # Window will be resized according to this parameter" } },
+
+		{ "maze_room_size",	{ "game", CFG_TYPE_INT,   "8", " # Number of cubes in each maze room axis" } },
+		{ "light_dist",		{ "game", CFG_TYPE_INT,  "18", " # Number of cubes which light can pass before ends" } },
+		{ "maze_size_x",	{ "game", CFG_TYPE_INT,   "3", " # Number of x-rooms" } },
+		{ "maze_size_y",	{ "game", CFG_TYPE_INT,   "3", " # Number of y-rooms" } },
+		{ "maze_size_z",	{ "game", CFG_TYPE_INT,   "3", " # Number of z-rooms" } },
+		{ "maze_size_w",	{ "game", CFG_TYPE_INT,   "3", " # Number of w-rooms" } },
+		{ "seed",			{ "game", CFG_TYPE_INT,  "-1", " # set -1 to use random seed" } },
+
+		{ "editor_room_size",{ "editor", CFG_TYPE_INT,   "15", " # Number of cubes in each maze room axis" } },
+		{ "editor_light_dist",{ "editor", CFG_TYPE_INT,  "18", " # Number of cubes which light can pass before ends" } },
+
+		{ "speed",			{ "controls", CFG_TYPE_FLOAT, "5.0", " # Player speed during movement" } },
+		{ "mouse_sens",		{ "controls", CFG_TYPE_FLOAT, "1.0", " # Speed of camera rotation" } },
 		{ "ground_rotation",{ "controls", CFG_TYPE_BOOL,   "0", " # Shooter-like camera positioning like ground-graviation" } },
-		{ "display_coords",{ "controls", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable. Displays maze coordinates." } },
+		{ "display_coords",	{ "controls", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable. Displays maze coordinates." } },
 		{ "show_w-rearviews",{ "controls", CFG_TYPE_BOOL,   "1", " # Displays 2 small windows with camera rotated 90 degrees in YW and ZW angles" } },
-		{ "cpu_render",{ "advanced", CFG_TYPE_INT,   "0", " # 0 - GPU render; 1 - CPU render; 2 - 50/50: left half of the screen is GPU-based, right-half is CPU" } },
+
+		{ "anti_aliasing",	{ "video", CFG_TYPE_INT,   "1", "  # 0 - x1 rate; 1 - x4; 2 - x9" } },
+		{ "vsync",			{ "video", CFG_TYPE_BOOL,   "0", " # 0 - disable; 1 - enable" } },		
+		
 		{ "texture_smoothering",{ "advanced", CFG_TYPE_BOOL,   "0", " # 0 - Pixel art; 1 - linear smoothering" } },
-		{ "cube_pixels",{ "advanced", CFG_TYPE_INT,   "16", " # Number of pixels in one cube side texure" } },
-		{ "border_pixels",{ "advanced", CFG_TYPE_INT,   "1", " # Number of pixels that are darkened to emphasize borders" } }
+		{ "cube_pixels",	{ "advanced", CFG_TYPE_INT,   "16", " # Number of pixels in one cube side texure" } },
+		{ "border_pixels",{ "advanced", CFG_TYPE_INT,   "1", " # Number of pixels that are darkened to emphasize borders" } },
+	    { "editor_mode", { "advanced", CFG_TYPE_BOOL,   "0", " # Forces to show editors tools for maze game" } }
 	};
 
 	

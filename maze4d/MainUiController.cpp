@@ -13,24 +13,17 @@ void MainUiController::Render(uint8_t* buffer)
 {
 	if (openedUiList.empty()) isMenu = false;
 
-	if (game->CpuRender == 0)
-		memset(buffer, 0, game->viewWidth * game->viewHeight * 4);
+	memset(buffer, 0, game->viewWidth * game->viewHeight * 4);
 
 	if (reRenderBackground || openedUiList.empty())
 	{
-		game->Render(buffer);
+		//game->Draw();
 		reRenderBackground = false;
 	}
 
 	if (!openedUiList.empty())
 		openedUiList.top()->Render(buffer);
-	else
-	{
-		if (game->cfg->GetBool("display_coords"))
-			this->RenderPlayerinfo(&game->player, buffer);
-	}
-
-	game->DrawScene(buffer);
+	
 }
 
 void MainUiController::NextMenuItem() 
@@ -124,7 +117,6 @@ UI_ACTION_CODE MainUiController::OnKeyInput(unsigned int keyCode)
 
 void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 {
-
 	int maxWidth = game->viewWidth;
 	int maxHeight = game->viewHeight;
 
@@ -139,7 +131,7 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 
 	stream.str(std::string()); //empty string
 	stream << " FPS:" << this->FPS;
-	RenderUItext(stream.str(), fontSize, buffer, maxWidth - fontSize*5, maxHeight - paddingY);
+	RenderUItext(stream.str(), fontSize, maxWidth - fontSize*5, maxHeight - paddingY);
 
 	if (game->player.groundRotation)
 	{
@@ -151,7 +143,7 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 		stream << " roll :" << float2str(player->angleYZ, AngleDecimals, floatLength);
 
 		anglesText = stream.str();
-		RenderUItext(anglesText, fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext(anglesText, fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 
 		/*Render second line: XW and ZW*/
@@ -161,19 +153,20 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 		stream << " rollW:" << float2str(player->angleYW, AngleDecimals, floatLength);
 
 		anglesText = stream.str();
-		RenderUItext(anglesText, fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext(anglesText, fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 	}
 
+	int roomSize = game->cfg->GetInt("maze_room_size");
 	//Render player position (Cubes-like)
 	stream.str(std::string()); //empty string
-	stream << "Maze position x: " << std::fixed << std::setprecision(0) << std::ceil(player->lastPos.x/game->field->roomSize);
-	stream << " y: " << std::fixed << std::setprecision(0) << std::ceil(player->lastPos.y / game->field->roomSize);
-	stream << " z: " << std::fixed << std::setprecision(0) << std::ceil(player->lastPos.z / game->field->roomSize);
-	stream << " w: " << std::fixed << std::setprecision(0) << std::ceil(player->lastPos.w / game->field->roomSize);
+	stream << "Maze position x: " << std::fixed << std::setprecision(0) << std::ceil(player->pos.x/roomSize);
+	stream << " y: " << std::fixed << std::setprecision(0) << std::ceil(player->pos.y / roomSize);
+	stream << " z: " << std::fixed << std::setprecision(0) << std::ceil(player->pos.z / roomSize);
+	stream << " w: " << std::fixed << std::setprecision(0) << std::ceil(player->pos.w / roomSize);
 
 	anglesText = stream.str();
-	RenderUItext(anglesText, fontSize, buffer, paddingX, maxHeight - paddingY);
+	RenderUItext(anglesText, fontSize, paddingX, maxHeight - paddingY);
 	paddingY += lineSpace;
 
 
@@ -184,28 +177,29 @@ void MainUiController::RenderPlayerinfo(Player* player, uint8_t* buffer)
 		//Render player absolute position
 		stream.str(std::string()); //empty string
 		stream << "Coord (x,y,z,w): (" << std::fixed << std::setprecision(2);
-		stream << player->lastPos.x << "," << player->lastPos.y << "," << player->lastPos.z << "," << player->lastPos.w << ")";
+		stream << player->pos.x << "," << player->pos.y << "," << player->pos.z << "," << player->pos.w << ")";
 
+		RotationMatrix* rotMat = &player->rotationMatrix;
+		RotationMatrix* baseMat = &player->basisMatrix;
 
 		anglesText = stream.str();
-		RenderUItext(anglesText, fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext(anglesText, fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 		
-		RenderUItext("vx_basis=" + vec2str(player->vx_basis) + " vx=" + vec2str(player->vx), fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext("vx_basis=" + vec2str(baseMat->vx) + " vx=" + vec2str(rotMat->vx), fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 
-		RenderUItext("vy_basis=" + vec2str(player->vy_basis) + " vy=" + vec2str(player->vy), fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext("vy_basis=" + vec2str(baseMat->vy) + " vy=" + vec2str(rotMat->vy), fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 
-		RenderUItext("vz_basis=" + vec2str(player->vz_basis) + " vz=" + vec2str(player->vz), fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext("vz_basis=" + vec2str(baseMat->vz) + " vz=" + vec2str(rotMat->vz), fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 
-		RenderUItext("vw_basis=" + vec2str(player->vw_basis) + " vw=" + vec2str(player->vw), fontSize, buffer, paddingX, maxHeight - paddingY);
+		RenderUItext("vw_basis=" + vec2str(baseMat->vw) + " vw=" + vec2str(rotMat->vw), fontSize, paddingX, maxHeight - paddingY);
 		paddingY += lineSpace;
 		/**/
 
 		//RenderUItext(game->field->MapToString(), fontSize, buffer, paddingX, maxHeight - paddingY);
 		//paddingY += lineSpace;
 	}
-
 }
