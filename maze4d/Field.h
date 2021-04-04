@@ -47,6 +47,7 @@ public:
 	void SetBackgroundColor(float R, float G, float B, float Alpha = 1.0f);
 	void SetCameraView(Player* player);
 	void SetAntialiasing(int antiAliasRate = 1);
+	void SetSelectedBlock(glm::ivec4 pos);
 	void ReadConfig(Config* cfg);
 
 	virtual void Draw();

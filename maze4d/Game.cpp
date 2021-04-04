@@ -108,16 +108,8 @@ void Game::NewEditor()
 	//	raycaster.Init(field);	
 }
 
-void Game::UpdateShaderPlayer(Player curPlayer)
-{
-	field->SetCameraView(&curPlayer);
-}
-
-
 void Game::Draw()
-{
-	UpdateShaderPlayer(player);
-	
+{	
 	field->SetFrameSize(- 1, -1, 2, 2);
 	field->SetCameraView(&player);
 	field->Draw();

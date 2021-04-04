@@ -31,6 +31,7 @@ public:
 	void SetResolution(int viewWidth, int viewHeight);
 	void SetMaxRayOutDistance(int distance);
 	void SetAntialiasing(int antiAliasRate = 1);//0 - no, 1 - x4, 2 - x9 times sampling
+	void SetSelectedBlock(glm::ivec4 pos);
 	void ReadConfig(Config* cfg);
 	void SetBackgroundColor(glm::vec4 backgrounColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f)) { SetBackgroundColor(backgrounColor.x, backgrounColor.y, backgrounColor.z, backgrounColor.w); }
 	void SetBackgroundColor(float R, float G, float B, float Alpha = 1.0f);

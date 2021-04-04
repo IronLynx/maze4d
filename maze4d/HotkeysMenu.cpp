@@ -41,12 +41,14 @@ void HotKeysMenu::Render(uint8_t* buffer)
 	lines.push_back(" ");
 	lines.push_back("------------Editor tools------------");
 	lines.push_back("New cube      : Left Mouse Click");
+	lines.push_back("New cube near : Scroll/Mouse4 Click");
 	lines.push_back("Delete cube   : Right Mouse Click");
 	lines.push_back("Solid cube    : 1");
 	lines.push_back("Light cube    : 2");
 	lines.push_back("Clear all     : Delete");
-	lines.push_back("Decrease transparency  : Scroll Down");
-	lines.push_back("Increase transparency  : Scroll Up");
+	lines.push_back("Restore map border     : Insert");
+	lines.push_back("Decrease transparency  : Scroll/Page Down");
+	lines.push_back("Increase transparency  : Scroll/Page Up");
 	lines.push_back(" ");
 	lines.push_back("------------Other------------");
 	lines.push_back("Reset player  : P");

@@ -80,8 +80,8 @@ void RaycastingShader::SetFrameSize(float bottomX, float bottomY, float width, f
 
 	gameGraphics->SetNewPosition(bottomX, bottomY, width, height);
 
-	int relativeResolutionX = (int)basicResolutionX * width / 2;
-	int relativeResolutionY = (int)basicResolutionY * height / 2;
+	int relativeResolutionX = (int)(basicResolutionX * width / 2);
+	int relativeResolutionY = (int)(basicResolutionY * height / 2);
 
 	SetResolution(relativeResolutionX, relativeResolutionY);
 }
@@ -103,6 +103,13 @@ void RaycastingShader::SetAntialiasing(int antiAliasRate)
 	int AntiAliasingEnabled = antiAliasRate;
 	GLuint loc = glGetUniformLocation(shader->ID, "AntiAliasingEnabled");
 	glUniform1i(loc, AntiAliasingEnabled);
+}
+
+void RaycastingShader::SetSelectedBlock(glm::ivec4 pos)
+{
+	glUseProgram(shader->ID);
+	GLint loc = glGetUniformLocation(shader->ID, "selectedBlock");
+	glUniform4i(loc, pos.x, pos.y, pos.z, pos.w);
 }
 
 void RaycastingShader::SetMaxRayOutDistance(int distance = 0)
@@ -162,24 +169,21 @@ void RaycastingShader::ReadConfig(Config* cfg)
 
 void RaycastingShader::BindTextures()
 {
-	Cube::BindTextures();
-	glActiveTexture(GL_TEXTURE0 + 1);
-	glBindTexture(GL_TEXTURE_3D, curMapTextureId);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //GL_NEAREST GL_LINEAR
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	auto bindTex = [](int n, GLuint id)
+	{
+		glActiveTexture(GL_TEXTURE0 + n);
+		glBindTexture(GL_TEXTURE_3D, id);
+		// set the texture wrapping parameters
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// set texture filtering parameters
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	};
+	bindTex(1, curMapTextureId);
+	bindTex(2, curLightMapTextureId);
 
-	glActiveTexture(GL_TEXTURE0 + 2);
-	glBindTexture(GL_TEXTURE_3D, curLightMapTextureId);
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	Cube::BindTextures();
 }
 
 void RaycastingShader::LoadFieldToGL()
@@ -204,9 +208,6 @@ void RaycastingShader::LoadFieldToGL()
 	glUseProgram(shader->ID);
 	GLint curMapId = glGetUniformLocation(shader->ID, "currentMap");
 	glUniform1i(curMapId, 1); // Texture unit 1 is for current map.
-
-	Cube::LoadToGL(shader);
-	Cube::LoadLightTextureToGL(shader);
 }
 
 //for debug purposes only
@@ -242,8 +243,6 @@ void RaycastingShader::DebugLoadAll()
 	glUseProgram(shader->ID);
 	GLint curMapId = glGetUniformLocation(shader->ID, "currentMap");
 	glUniform1i(curMapId, 1); // Texture unit 1 is for current map.
-
-
 }
 
 int RaycastingShader::GetIndex(const int x, const int y, const int z, const int w)
@@ -256,7 +255,6 @@ int RaycastingShader::GetIndex(glm::ivec4 pos)
 {
 	return GetIndex(pos.x, pos.y, pos.z, pos.w);
 }
-
 
 bool RaycastingShader::IsCubeIndexValid(int x, int y, int z, int w)
 {

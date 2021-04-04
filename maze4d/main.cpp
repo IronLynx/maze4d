@@ -2,33 +2,8 @@
 
 First person four-dimensional maze game, visualized by 3D cross-sections.
 
-
- ================== Controls ==================
-
- ------------ Movement ------------
- Forward (+x): W,   Back (-x): S
- Up      (+y): R,   Down (-y): F
- Right   (+z): D,   Left (-z): A
- Ana     (+w): T,   Kata (-w): G
-
- ------------ Rotation ------------
- XY (pitch): I,    K  (or mouseY)
- XZ (yaw):   L,    J  (or mouseX)
- XW:         O,    U  (or mouseY + LSHIFT)
- YZ (roll):  E,    Q
- YW:         Z,    C
- ZW:         M,    N  (or mouseX + LSHIFT)
-
- ------------ Other ------------
- Reset player:      P
- Noclip:            F8
- Fullscreen:        F11
- Lock/unlock mouse: SPACE or mouse button
- Quit:              ESC
-
 -----------------------------------------------------------------------------*/
 #pragma once
-
 
 #include <glad/glad.h> // generated from https://glad.dav1d.de
 #include <shader.h>
@@ -36,9 +11,6 @@ First person four-dimensional maze game, visualized by 3D cross-sections.
 #include <Game.h>
 #include <UserInterfaceClasses.h>
 #include <MapEditor.h>
-
-
-
 
 static Game game;
 MainUiController mainUi = MainUiController(&game);
@@ -121,13 +93,10 @@ void OnKeyInputInGame(GLFWwindow* window, int key, int scancode, int action, int
 
 	if (isMouseLocked)
 		game.playerController->OnKeyInput(window, key, scancode, action, mods);
-		//game.playerController->OnKeyInput(window, key, scancode, action, mods);
-	
 }
 
 void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-
 	if (mainUi.isMenu)
 		OnKeyInputMenu(window, key, scancode, action, mods);
 	else
@@ -165,7 +134,6 @@ void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods)
 
 void OnMouseInput(GLFWwindow* window, double xpos, double ypos) 
 {
-
 	IInputController* curController = game.playerController;
 	if (isMouseLocked && !mainUi.isMenu)
 		curController->OnMouseInput(window, xpos, ypos);
@@ -277,6 +245,9 @@ void RenderFrame(double delta, Shader* shader, uint8_t* texData)
 		game.Draw();
 		if (game.editorToolsEnabled || game.cfg->GetBool("editor_mode"))
 			editor.Draw();
+		else
+			game.field->SetSelectedBlock(glm::ivec4(-1));
+
 		if (game.cfg->GetBool("display_coords"))
 			mainUi.RenderPlayerinfo(&game.player, texData);
 		

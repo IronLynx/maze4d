@@ -54,8 +54,4 @@ public:
 	
 	Config* cfg = nullptr;
 	Field* field = nullptr; //to get roo
-private:
-//	Raycaster raycaster;
-	
-	void UpdateShaderPlayer(Player curPlayer);
 };

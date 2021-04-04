@@ -1,11 +1,10 @@
 #version 330 core
 
 out vec4 FragColor;
-in vec3 ourColor;
 in vec2 TexCoord;
 
 //buffer with CPU rendered picture (legacy)
-uniform sampler2D texture1; //Texture0
+uniform sampler2D uiTexture; //Texture0
 
 //list of 4d coordinates encoded into 3-dimensional texture
 //Special function converts 4d to 3d index
@@ -20,22 +19,14 @@ uniform ivec3 MapTexSize;
 uniform ivec4 mapSize;
 uniform ivec2 gameResolution; //viewWidth and viewHeight
 
-uniform int CpuRender = 0;
 uniform int AntiAliasingEnabled = 0;
-const int  EDGES_COUNT = 8;
 
 //regular 4d Cube texture, contains 8 textures of solid 3d cubes
 uniform sampler3D edge3dCube[8]; //Textures50-57
+uniform sampler3D selection3dCube; //Texture58 of the editor selection
+uniform sampler3D light3dCube; //Texture59 of the light cube
+
 uniform float texturesPerCube = 1.0f; //tiles texture times per cube
-
-uniform sampler3D light3dCube; //Texture59 of the light cube 
-
-//4d cube edge numbering convention
-const int  NEG_X = 0; const int  POS_X = 1;
-const int  NEG_Y = 2; const int  POS_Y = 3;
-const int  NEG_Z = 4; const int  POS_Z = 5;
-const int  NEG_W = 6; const int  POS_W = 7;
-const int  NULL_EDGE = 8; 
 
 //Rotation matrix
 uniform vec4 vx = vec4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -46,9 +37,18 @@ uniform vec4 vw = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 //player position
 uniform vec4 pos = vec4(4.2f, 4.2f, 4.2f, 4.2f);
 
+uniform ivec4 selectedBlock = ivec4(-1, -1, -1, -1);
+
 uniform vec4 backgroundColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 uniform int maxRenderDistance = -1;
+
+//4d cube edge numbering convention
+const int  NEG_X = 0; const int  POS_X = 1;
+const int  NEG_Y = 2; const int  POS_Y = 3;
+const int  NEG_Z = 4; const int  POS_Z = 5;
+const int  NEG_W = 6; const int  POS_W = 7;
+const int  NULL_EDGE = 8;
 
 ivec3 Convert4dIdxTo3dIdx(ivec4 Idx4)
 {
@@ -170,7 +170,7 @@ vec4 GetRaycastVector(vec2 texCoord)
 	return v;
 }
 
-vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int blockType, float lightLevel = 1.0f)
+vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int blockType, float lightLevel = 1.0f, float addedAlpha = 1.0f)
 {
 	float dist = 0.0f;
 	vec3 texPoint;
@@ -211,7 +211,17 @@ vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int b
 	else if (blockType == 255)
 	{
 		CubePixel = texture(light3dCube, texPoint);
-		//CubePixel.w = 245;
+	}
+
+	CubePixel = CubePixel * addedAlpha;
+
+	// Add border for selected block
+	if (map.x == selectedBlock.x && map.y == selectedBlock.y &&
+		map.z == selectedBlock.z && map.w == selectedBlock.w)
+	{
+		vec4 blockSelectPixel = texture(selection3dCube, texPoint);
+		if (blockSelectPixel.a > 0.0f)
+			CubePixel = blockSelectPixel;
 	}
 
 	return CubePixel;
@@ -220,7 +230,6 @@ vec4 GetPixelFromTexture(ivec4 map, vec4 raycastVec, int edge, ivec4 step, int b
 // uses DDA algo (from https://lodev.org/cgtutor/raycasting.html)
 vec4 GetRaycastPixel(vec4 raycastVector)
 {
-	
 	ivec4 map = ivec4(floor(pos));
 	vec4 v = raycastVector; //based on x,y screen position
 	ivec4 step = ivec4(sign(v));
@@ -303,8 +312,7 @@ vec4 GetRaycastPixel(vec4 raycastVector)
 			//Check if ray has hit a wall
 			if (blockType > 0)
 			{
-				hitPixel = GetPixelFromTexture(map, v, edge, step, blockType, lightLevel);
-				hitPixel.w = cell.x * hitPixel.w;
+				hitPixel = GetPixelFromTexture(map, v, edge, step, blockType, lightLevel, cell.x);
 			}
 			else if (prevBlockType > 0)
 			{
@@ -374,8 +382,7 @@ vec2[9] GetOffsets(int multiplicator)
 }
 
 void main()
-{	
-	
+{
 	//Anti-aliasing x1, x 4 or x9
 	int AliasMulitplicator = AntiAliasingEnabled + 1;
 	if (AliasMulitplicator > 3) AliasMulitplicator = 3;
@@ -404,8 +411,8 @@ void main()
 	vec4 GamePixel = AntialiasedPixel;
 
 	//overlay user interface texture on top of game frame
-	vec4 UiPixel = texture(texture1, TexCoord);
-	float UiAlpha = texture(texture1, TexCoord).a;
+	vec4 UiPixel = texture(uiTexture, TexCoord);
+	float UiAlpha = texture(uiTexture, TexCoord).a;
 
 	FragColor = GamePixel * (1 - UiAlpha) + UiPixel*UiAlpha;
 }

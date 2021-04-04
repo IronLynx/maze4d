@@ -277,4 +277,5 @@ void Field::SetBackgroundColor(glm::vec4  col) { rayShader->SetBackgroundColor(c
 void Field::SetBackgroundColor(float R, float G, float B, float Alpha) { rayShader->SetBackgroundColor(R, G, B, Alpha); }
 void Field::SetCameraView(Player* player) { rayShader->SetCameraView(player); }
 void Field::SetAntialiasing(int antiAliasRate) { rayShader->SetAntialiasing(antiAliasRate); }
+void Field::SetSelectedBlock(glm::ivec4 pos) { rayShader->SetSelectedBlock(pos); }
 void Field::ReadConfig(Config* cfg) { rayShader->ReadConfig(cfg); }

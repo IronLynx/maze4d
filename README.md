@@ -30,11 +30,22 @@ Project includes following dependencies:
  Align W-angle:    TAB
  Reset W-angle:    B
 
+ ---------- Editor tools ----------
+ New cube:              Left Mouse Click
+ New cube near:         Scroll/Mouse4 Click
+ Delete cube:           Right Mouse Click
+ Solid cube:            1
+ Light cube:            2
+ Clear all:             Delete
+ Restore map border:    Insert
+ Decrease transparency: Scroll/Page Down
+ Increase transparency: Scroll/Page Up
+
  ------------- Other --------------
  Reset player:      P
  Noclip:            F8
  Fullscreen:        F11
- Lock/unlock mouse: SPACE or mouse button
+ Lock/unlock mouse: SPACE
  Menu:              ESC
 ```
 

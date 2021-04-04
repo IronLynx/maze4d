@@ -1,9 +1,7 @@
 #pragma once
 
-
 #include <Field.h>
 #include <OneShapeField.h>
-
 
 class MapEditor : public IInputController, IDrawable
 {
@@ -71,33 +69,55 @@ public:
 		OneCubeField->SetBackgroundColor(0.0f, 0.0f, 0.0f, 0.0f);
 		OneCubeField->SetAntialiasing(2);
 
-		gameGraphics = new RectangleGraphics(shader, -0.005, -0.005, 0.01, 0.01);
+		gameGraphics = new RectangleGraphics(shader, -0.005f, -0.005f, 0.01f, 0.01f);
 		gameGraphics->InitSelfShader();
 		
 	}
 	
-	void AddCube(Cell cell = Cell(1, 255, false))
+	void AddCube(Cell cell = Cell(1, 255, false), bool isNear = false)
 	{
-		glm::ivec4 map = FindFrontCell(&game->player);
+		glm::ivec4 block = isNear ?
+			FindFrontCell(&game->player) :
+			FindFrontCellByRay(&game->player, true);
 
-		if (!game->field->IsCubeIndexValid(map.x, map.y, map.z, map.w))
+		if (!game->field->IsCubeIndexValid(block.x, block.y, block.z, block.w))
 			return;
 
-		//int idx = game->field->GetIndex(pos.x, pos.y, pos.z, pos.w);
-		game->field->CreateCube(map.x, map.y, map.z, map.w, cell);
+		game->field->CreateCube(block.x, block.y, block.z, block.w, cell);
 	}
 
 	void DeleteCube()
 	{
-		glm::ivec4 map = FindFrontCell(&game->player);
+		glm::ivec4 block = FindFrontCellByRay(&game->player);
+
+		if (!game->field->IsCubeIndexValid(block.x, block.y, block.z, block.w))
+			return;
+
+		Cell_t cell = new Cell();
+		game->field->CreateCube(block.x, block.y, block.z, block.w, Field::StdEmptyCell);
+	}
+
+	void ChangeBlockTransparency(float value)
+	{
+		glm::ivec4 map = FindFrontCellByRay(&game->player);
 
 		if (!game->field->IsCubeIndexValid(map.x, map.y, map.z, map.w))
 			return;
-		Cell_t cell = new Cell(); //emptyCell
 
-		//int idx = game->field->GetIndex(pos.x, pos.y, pos.z, pos.w);
-		game->field->CreateCube(map.x, map.y, map.z, map.w, Field::StdEmptyCell);
+		int index = game->field->GetIndex(map.x, map.y, map.z, map.w);
+		Cell cell = game->field->GetCube(map);
 
+		if (cell.cellType == EMPTY_BLOCK)
+			return;
+
+		float fAlpha = (float)cell.alphaValue + value;
+		int alpha;
+		alpha = (int)std::max(0.0f, fAlpha);
+		if (cell.cellType != LIGHT_BLOCK)
+			alpha = (int)std::max(30.0f, fAlpha);
+		alpha = (int)std::min(255, alpha);
+		cell.alphaValue = alpha;
+		game->field->CreateCube(map, Cell(cell));
 	}
 
 	virtual void OnKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) 
@@ -114,6 +134,19 @@ public:
 				game->field->CreateCube(i, Cell());
 			game->field->CreateBorders();
 		}
+		if (key == GLFW_KEY_INSERT && action == GLFW_PRESS)
+		{
+			game->field->CreateBorders();
+			game->field->LoadFieldToGL();
+		}
+		if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
+		{
+			ChangeBlockTransparency(10.0f);
+		}
+		if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
+		{
+			ChangeBlockTransparency(-10.0f);
+		}
 	}
 	virtual void OnMouseButtonInput(GLFWwindow* window, int button, int action, int mods)
 	{
@@ -126,41 +159,20 @@ public:
 			DeleteCube();
 		}
 
-		if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
+		if ((button == GLFW_MOUSE_BUTTON_MIDDLE || button == GLFW_MOUSE_BUTTON_4) &&
+			action == GLFW_PRESS)
 		{
-			game->field->CreateBorders();
-			game->field->LoadFieldToGL();
+			AddCube(Cell(activeAddingCell), true);
 		}
 
 	}
 	virtual void OnMouseInput(GLFWwindow* window, double xpos, double ypos) {}
-	virtual void OnScrollInput(GLFWwindow* window, double xoffset, double yoffset) 
+	virtual void OnScrollInput(GLFWwindow* window, double xoffset, double yoffset)
 	{
-		glm::ivec4 map = FindFrontCell(&game->player);
-
-		if (!game->field->IsCubeIndexValid(map.x, map.y, map.z, map.w))
-			return;
-
-		int index = game->field->GetIndex(map.x, map.y, map.z, map.w);
-		Cell cell = game->field->GetCube(map);
-
-		if (cell.cellType == EMPTY_BLOCK)
-			return;
-
-		float fAlpha = (float)cell.alphaValue + 10 * (float) yoffset;
-		int alpha;
-		alpha = (int)std::max(0.0f, fAlpha);
-		if(cell.cellType != LIGHT_BLOCK)
-			alpha = (int) std::max(30.0f, fAlpha);
-		alpha = (int) std::min(255, alpha);
-		cell.alphaValue = alpha;
-		game->field->CreateCube(map, Cell(cell));
-
+		ChangeBlockTransparency((float)yoffset * 10.0f);
 	}
 	virtual void FreezeController() {}
 	virtual void UnFreezeController() {}
-
-	Game* game = nullptr;
 
 	glm::ivec4 FindFrontCell(Player* player)
 	{
@@ -173,6 +185,114 @@ public:
 		map = glm::ivec4(pos);
 
 		return map;
+	}
+
+	glm::ivec4 FindFrontCellByRay(Player* player, bool findPrevious = false)
+	{
+		const int MAX_DIST = 15; // distance in blocks
+
+		glm::vec4 v = player->rotationMatrix.vx;
+		//int edge = 0;
+
+		//which box of the map we're in
+		glm::ivec4 block(player->pos);
+		glm::ivec4 prevBlock(-1);
+
+		//length of ray from current position to next x or y-side
+		glm::vec4 sideDist;
+
+		//length of ray from one x or y-side to next x or y-side
+		glm::vec4 deltaDist(glm::abs(1.0f / v.x), glm::abs(1.0f / v.y), glm::abs(1.0f / v.z), glm::abs(1.0f / v.w));
+
+		//what direction to step in x or y-direction (either +1 or -1)
+		glm::i8vec4 step;
+
+		//calculate step and initial sideDist
+		if (v.x < 0)
+		{
+			step.x = -1;
+			sideDist.x = (player->pos.x - block.x) * deltaDist.x;
+		}
+		else
+		{
+			step.x = 1;
+			sideDist.x = (block.x + 1.0f - player->pos.x) * deltaDist.x;
+		}
+		if (v.y < 0)
+		{
+			step.y = -1;
+			sideDist.y = (player->pos.y - block.y) * deltaDist.y;
+		}
+		else
+		{
+			step.y = 1;
+			sideDist.y = (block.y + 1.0f - player->pos.y) * deltaDist.y;
+		}
+		if (v.z < 0)
+		{
+			step.z = -1;
+			sideDist.z = (player->pos.z - block.z) * deltaDist.z;
+		}
+		else
+		{
+			step.z = 1;
+			sideDist.z = (block.z + 1.0f - player->pos.z) * deltaDist.z;
+		}
+		if (v.w < 0)
+		{
+			step.w = -1;
+			sideDist.w = (player->pos.w - block.w) * deltaDist.w;
+		}
+		else
+		{
+			step.w = 1;
+			sideDist.w = (block.w + 1.0f - player->pos.w) * deltaDist.w;
+		}
+
+		//perform DDA
+		for (int dist = 0; dist < MAX_DIST; dist++)
+		{
+			//jump to next map square, OR in x-direction, OR in y-direction
+			if (sideDist.x <= sideDist.y && sideDist.x <= sideDist.z && sideDist.x <= sideDist.w)
+			{
+				sideDist.x += deltaDist.x;
+				block.x += step.x;
+				//edge = player->pos.x < map.x ? NEG_X : POS_X;
+			}
+			else if (sideDist.y <= sideDist.x && sideDist.y <= sideDist.z && sideDist.y <= sideDist.w)
+			{
+				sideDist.y += deltaDist.y;
+				block.y += step.y;
+				//edge = player->pos.y < map.y ? NEG_Y : POS_Y;
+			}
+			else if (sideDist.z <= sideDist.x && sideDist.z <= sideDist.y && sideDist.z <= sideDist.w)
+			{
+				sideDist.z += deltaDist.z;
+				block.z += step.z;
+				//edge = player->pos.z < map.z ? NEG_Z : POS_Z;
+			}
+			else if (sideDist.w < sideDist.x && sideDist.w <= sideDist.y && sideDist.w <= sideDist.z)
+			{
+				sideDist.w += deltaDist.w;
+				block.w += step.w;
+				//edge = player->pos.w < map.w ? NEG_W : POS_W;
+			}
+
+			if (game->field->IsCubeIndexValid(block.x, block.y, block.z, block.w))
+			{
+				Cell cell = game->field->GetCube(block.x, block.y, block.z, block.w);
+				if (cell.cellType != EMPTY_BLOCK)
+					return findPrevious ? prevBlock : block;
+			}
+			else
+			{
+				break;
+			}
+
+			prevBlock = block;
+		}
+
+		return glm::ivec4(-1);
 	}
 
 	virtual void Draw()
@@ -222,11 +342,13 @@ public:
 		LightCubeField->SetCameraView(&curPlayer);
 		LightCubeField->Draw();
 
-		gameGraphics->SetNewPosition(-0.005, -0.005, 0.01, 0.01);
-		gameGraphics->Draw(255, 255, 255, 255);
+		game->field->SetSelectedBlock(FindFrontCellByRay(&game->player));
 
+		gameGraphics->SetNewPosition(-0.005f, -0.005f, 0.01f, 0.01f);
+		gameGraphics->Draw(255, 255, 255, 255);
 	}
 
+	Game* game = nullptr;
 	Field* OneCubeField;
 
 private:
